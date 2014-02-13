@@ -11,7 +11,7 @@ import java.io.OutputStream;
 public class QueryReult extends BaseDto
 {
 	/**
-	 * 查询的定义
+	 * 查询的定义，在执行一个查询时会得到这个查询的定义
 	 */
 	private QueryDefinition queryDefinition;
 	/**
