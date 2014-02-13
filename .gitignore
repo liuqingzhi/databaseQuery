@@ -1,0 +1,9 @@
+/.settings
+/.classpath
+/.project
+#####以/结尾表示匹配一个目录，所以该目录及目录下的所有文件都不再受git管理
+/target/
+/work
+/.tomcat
+/src/main/webapp/.#webclasspath
+/.tomcatplugin
