@@ -11,10 +11,6 @@ import java.io.OutputStream;
 public class QueryReult extends BaseDto
 {
 	/**
-	 * 查询的定义，在执行一个查询时会得到这个查询的定义
-	 */
-	private QueryDefinition queryDefinition;
-	/**
 	 * 要使用流输出的查询结果
 	 */
 	private OutputStream contentStream;
@@ -29,13 +25,7 @@ public class QueryReult extends BaseDto
 	 * 
 	 */
 	private Boolean onlyShowContent;
-	
-    public QueryDefinition getQueryDefinition() {
-		return queryDefinition;
-	}
-	public void setQueryDefinition(QueryDefinition queryDefinition) {
-		this.queryDefinition = queryDefinition;
-	}
+
 	public OutputStream getContentStream() {
 		return contentStream;
 	}
