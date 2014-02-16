@@ -19,6 +19,7 @@ import com.yesmynet.query.core.dto.DataSourceConfig;
 import com.yesmynet.query.core.dto.Environment;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.RedisConfig;
 import com.yesmynet.query.core.dto.Role;
 import com.yesmynet.query.core.dto.User;
 import com.yesmynet.query.core.exception.ServiceException;
@@ -29,10 +30,26 @@ import com.yesmynet.query.core.service.ResourceHolder;
 import com.yesmynet.query.core.service.run.QueryRunService;
 
 public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implements QueryRunService{
+	/**
+	 * 配置的一些查询的实现
+	 */
 	Map<String,QueryService> configedQuerys;
+	/**
+	 * 所有数据库资源
+	 */
+	private List<DataSourceConfig> dataSourceConfigList;
+	/**
+	 * 所有redis资源
+	 */
+	private List<RedisConfig> redisConfigList;
+	/**
+	 * 资源ID和允许访问该ID资源的角色
+	 */
+	private Map<String,List<Role>> resourceRoles;
 	@Override
 	public QueryDefinition show(String queryId) {
 		QueryDefinition re = null;
+		Environment environment = getEnvironment();
 		QueryService queryService = configedQuerys.get(queryId);
 		if(queryService!=null)
 		{
@@ -54,13 +71,14 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		if(queryService instanceof QueryShowListner)
 		{
 			QueryShowListner listner=(QueryShowListner)queryService;
-			listner.beforeShow(getResourceHolder(), getEnvironment());
+			listner.beforeShow(getResourceHolder(environment), environment);
 		}
 		return re;
 	}
 	@Override
 	public QueryResult run(String queryId) {
 		QueryResult re =null;
+		Environment environment = getEnvironment();
 		QueryService query = configedQuerys.get(queryId);
 		if(query==null)
 		{
@@ -68,7 +86,7 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		}
 		if(query!=null)
 		{
-			re=query.doInQuery(getResourceHolder(), getEnvironment());
+			re=query.doInQuery(getResourceHolder(environment), environment);
 		}
 		else
 		{
@@ -117,9 +135,52 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	 * 得到资源持有者
 	 * @return
 	 */
-	private ResourceHolder getResourceHolder()
+	private ResourceHolder getResourceHolder(Environment environment)
 	{
-		ResourcesHolderImpl re=new ResourcesHolderImpl(null,null);
+		User user = environment.getUser();
+		List<DataSourceConfig> dataSources = getDataSources(user);
+		List<RedisConfig> redisConfigs = getRedisConfigs(user);
+		ResourcesHolderImpl re=new ResourcesHolderImpl(dataSources,redisConfigs);
+		return re;
+	}
+	/**
+	 * 得到当前用户有权限使用的所有数据库配置
+	 * @param user
+	 * @return
+	 */
+	private List<DataSourceConfig> getDataSources(User user)
+	{
+		List<DataSourceConfig> re=new ArrayList<DataSourceConfig>();
+		if(!CollectionUtils.isEmpty(dataSourceConfigList))
+		{
+			for(DataSourceConfig d:dataSourceConfigList)
+			{
+				if(isUserCanUseDatasourceConfig(d.getId(),user))
+				{
+					re.add(d);
+				}
+			}
+		}
+		return re;
+	}
+	/**
+	 * 得到当前用户有权限使用的所有redis配置
+	 * @param user
+	 * @return
+	 */
+	private List<RedisConfig> getRedisConfigs(User user)
+	{
+		List<RedisConfig> re=new ArrayList<RedisConfig>();
+		if(!CollectionUtils.isEmpty(redisConfigList))
+		{
+			for(RedisConfig d:redisConfigList)
+			{
+				if(isUserCanUseDatasourceConfig(d.getId(),user))
+				{
+					re.add(d);
+				}
+			}
+		}
 		return re;
 	}
 	/**
@@ -144,8 +205,6 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		String userName=((org.springframework.security.core.userdetails.User)authentication.getPrincipal()).getUsername();
 		Collection<? extends GrantedAuthority> authorities = securityContext.getAuthentication().getAuthorities();
 		
-		
-		
 		List<Role> roles=new ArrayList<Role>();
 		if(!CollectionUtils.isEmpty(authorities))
 		{
@@ -168,12 +227,10 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	/**
 	 * 判断用户是否有权操作指定的数据源配置
 	 */
-	private boolean isUserCanUseDatasourceConfig(DataSourceConfig datasource,User user)
+	private boolean isUserCanUseDatasourceConfig(String resourceId,User user)
 	{
 		boolean re=false;
-		List<Role> permitRoles = null;
-		
-		
+		List<Role> permitRoles = resourceRoles.get(resourceId);
 		if(CollectionUtils.isEmpty(permitRoles))
 		{	
 			re=true;
@@ -183,15 +240,12 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 			List<Role> roles = user.getRoles();
 			for(Role r:permitRoles)
 			{
-				if(!CollectionUtils.isEmpty(roles))
+				for(Role ur:roles)
 				{
-					for(Role ur:roles)
+					if (r.getRoleCode().equals(ur.getRoleCode()))
 					{
-						if (r.getRoleCode().equals(ur.getRoleCode()))
-						{
-							re=true;
-							break;
-						}
+						re=true;
+						break;
 					}
 				}
 				if(re)
@@ -199,7 +253,30 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 			}
 		}
 		
-		
 		return re;
+	}
+	public Map<String, QueryService> getConfigedQuerys() {
+		return configedQuerys;
+	}
+	public void setConfigedQuerys(Map<String, QueryService> configedQuerys) {
+		this.configedQuerys = configedQuerys;
+	}
+	public List<DataSourceConfig> getDataSourceConfigList() {
+		return dataSourceConfigList;
+	}
+	public void setDataSourceConfigList(List<DataSourceConfig> dataSourceConfigList) {
+		this.dataSourceConfigList = dataSourceConfigList;
+	}
+	public List<RedisConfig> getRedisConfigList() {
+		return redisConfigList;
+	}
+	public void setRedisConfigList(List<RedisConfig> redisConfigList) {
+		this.redisConfigList = redisConfigList;
+	}
+	public Map<String, List<Role>> getResourceRoles() {
+		return resourceRoles;
+	}
+	public void setResourceRoles(Map<String, List<Role>> resourceRoles) {
+		this.resourceRoles = resourceRoles;
 	}
 }

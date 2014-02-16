@@ -8,12 +8,8 @@ import javax.sql.DataSource;
  * @author 刘庆志
  *
  */
-public class DataSourceConfig
+public class DataSourceConfig extends BaseDto
 {
-	/**
-	 * 主键
-	 */
-	private String id;
 	/**
 	 * 显示名称
 	 */
@@ -26,14 +22,6 @@ public class DataSourceConfig
 	 * 配置的数据源
 	 */
 	private DataSource datasource;
-	public String getId()
-	{
-		return id;
-	}
-	public void setId(String id)
-	{
-		this.id = id;
-	}
 	public String getName()
 	{
 		return name;
