@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
 
-	<bean class="com.yesmynet.database.query.service.DatabaseIniterService" init-method="init">
+	<bean class="com.yesmynet.query.service.DatabaseIniterService" init-method="init">
 		<property name="sqlMapClientTemplate" ref="sqlMapClientTemplate"></property>
 		<property name="sqlFile" value="classpath:databaseUpdate.sql"></property>
 		<property name="expectedDatabaseVersion" value="1"></property>
