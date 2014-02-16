@@ -8,7 +8,7 @@ import java.io.OutputStream;
  * @author 刘庆志
  *
  */
-public class QueryReult extends BaseDto
+public class QueryResult extends BaseDto
 {
 	/**
 	 * 要使用流输出的查询结果

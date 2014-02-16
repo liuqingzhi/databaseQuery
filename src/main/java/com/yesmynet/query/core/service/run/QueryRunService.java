@@ -6,7 +6,7 @@ import javax.management.Query;
 import javax.sql.DataSource;
 
 import com.yesmynet.query.core.dto.QueryDefinition;
-import com.yesmynet.query.core.dto.QueryReult;
+import com.yesmynet.query.core.dto.QueryResult;
 
 
 /**
@@ -29,5 +29,5 @@ public interface QueryRunService
 	 * @param queryId 要运行的查询的ID
 	 * @return 查询结果，其中包含了查询的定义
 	 */
-	public QueryReult run(String queryId);
+	public QueryResult run(String queryId);
 }
