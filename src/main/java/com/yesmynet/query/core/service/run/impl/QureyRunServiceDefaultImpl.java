@@ -61,7 +61,7 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		else
 		{
 			re=getQueryDefinitionFromDB(queryId);
-			queryService=getQueryInstanceFromDB(queryId);
+			queryService=getQueryInstanceFromGroovyCode(re.getId(),re.getJavaCode());
 		}
 		if(queryService instanceof QueryDefinitionGetter)
 		{
@@ -82,7 +82,8 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		QueryService query = configedQuerys.get(queryId);
 		if(query==null)
 		{
-			query=getQueryInstanceFromDB(queryId);
+			QueryDefinition queryDefinitionFromDB = getQueryDefinitionFromDB(queryId);
+			query=getQueryInstanceFromGroovyCode(queryDefinitionFromDB.getId(),queryDefinitionFromDB.getJavaCode());
 		}
 		if(query!=null)
 		{
@@ -104,32 +105,27 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		return (QueryDefinition)this.getSqlMapClientTemplate().queryForObject("getQueryDefinitionById", queryId);
 	}
 	/**
-	 * 从数据库得到一个查询实例
-	 * @param id
+	 * 从Java代码得到一个QueryService的实例
+	 * @param queryId
+	 * @param javaCode
 	 * @return
 	 */
-	private QueryService getQueryInstanceFromDB(String id) 
+	private QueryService getQueryInstanceFromGroovyCode(String queryId,String javaCode)
 	{
 		QueryService myObject=null;
-	    if(StringUtils.hasText(id))
-	    {
-	        QueryDefinition queryDefinition=getQueryDefinitionFromDB(id);
-	        
-	        String javaCode = queryDefinition.getJavaCode();
-	        javaCode="package com.yesmynet.database.query."+ id +";"+javaCode;
-	        
-	        try
-	        {
-	            GroovyClassLoader gcl = new GroovyClassLoader();
-	            Class clazz = gcl.parseClass(javaCode, id);
-	            Object aScript = clazz.newInstance();
-	            myObject = (QueryService) aScript;
-	        } catch (Exception e)
-	        {
-	            throw new RuntimeException(e);
-	        } 
-	    }
-	    return myObject;
+        javaCode="package com.yesmynet.database.query."+ queryId +";"+javaCode;
+        
+        try
+        {
+            GroovyClassLoader gcl = new GroovyClassLoader();
+            Class clazz = gcl.parseClass(javaCode, queryId);
+            Object aScript = clazz.newInstance();
+            myObject = (QueryService) aScript;
+        } catch (Exception e)
+        {
+            throw new ServiceException("把代码转成java中的"+ QueryService.class.getName() +"对象实例出错了",e);
+        } 
+		return myObject;
 	}
 	/**
 	 * 得到资源持有者
