@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap>
+    
+    <!--检查一下，数据库是否已经初始化了-->
+    <select id="getDBInitedData" resultClass="com.yesmynet.database.query.dto.DBUpdateDTO" parameterClass="java.util.Map">
+       	select id,current_Version currentVersion,last_update_time lastUpdateTime From m_sys_database_init
+    </select>
+	
+	
+	<update id="updateSysInit" parameterClass="java.util.Map">
+        insert into m_sys_database_init 
+        (current_Version,last_update_time) 
+        values(#newCurrentVersion#,CURRENT_TIMESTAMP)
+    </update>
+	
+	<insert id="insertSysInit" parameterClass="java.util.Map">
+        insert into m_sys_database_init 
+        (current_Version,last_update_time) 
+        values(#newCurrentVersion#,CURRENT_TIMESTAMP)
+    </insert>
+    
+    <update id="deleteSysInit" parameterClass="java.util.Map">
+        delete from m_sys_database_init where current_Version <![CDATA[ < ]]>
+        (select max(current_Version) from m_sys_database_init) 
+    </update>
+</sqlMap>

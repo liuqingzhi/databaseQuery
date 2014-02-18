@@ -9,36 +9,10 @@
 		<property name="expectedDatabaseVersion" value="1"></property>
 		
 	</bean>
-	<bean id="parameterValidatorDefine" abstract="true">
-		<property name="sqlMapClientTemplate" ref="sqlMapClientTemplate"></property>
-	</bean>
-	
-	<bean id="queryDefinitionService" class="com.yesmynet.database.query.core.service.impl.QueryDefinitionServiceImpl" >
-		<property name="sqlMapClientTemplate" ref="sqlMapClientTemplate"></property>
-		<property name="defaultQueryInstance" ref="queryDefaultImpl"></property>
-		<property name="parameterValidatorDefineList">
-			<list>
-				<bean class="com.yesmynet.database.query.core.service.impl.ParameterRegularExpressionValidatorDefine" parent="parameterValidatorDefine">
-				</bean>
-			</list>	
-		</property>
-	</bean>
-	
-	<bean id="queryDefaultImpl" class="com.yesmynet.database.query.service.QueryDefaultImpl" >
-		<property name="databaseDialectServices">
-			<list>
-				<bean class="com.yesmynet.database.query.service.DatabseDialectService$1">
-				</bean>
-			</list>	
-		</property>
-		
-	</bean>
-	
-	
-	<bean id="dataSourceService" class="com.yesmynet.database.query.core.service.impl.DataSourceServiceImpl" >
+	<bean id="" class="com.yesmynet.query.core.service.run.impl.QureyRunServiceDefaultImpl">
 		<property name="dataSourceConfigList">
 			<list>
-				<bean class="com.yesmynet.database.query.dto.DataSourceConfig">
+				<bean class="com.yesmynet.query.core.dto.DataSourceConfig">
 					<property name="id" value="oracleDataSourceId"></property>
                     <property name="name" value="oracle数据库"></property>
                     <property name="databaseDialect" value="Oracle"></property>
@@ -60,30 +34,42 @@
                     </property>
 				</bean>
 				
-				<bean class="com.yesmynet.database.query.dto.DataSourceConfig">
+				<bean class="com.yesmynet.query.core.dto.DataSourceConfig">
 					<property name="id" value="derbyDataSourceId"></property>
                     <property name="name" value="derby数据库"></property>
                     <property name="databaseDialect" value="Derby"></property>
                     <property name="datasource" ref="dataSource">
                     </property>
-                    <property name="permitRoles">
-                    	<list>
-							<bean class="com.yesmynet.database.query.dto.Role">
-								<property name="roleCode" value="role_admin"></property>
-							</bean>
-						</list>	
-                    </property>
 				</bean>
-				
 			</list>
 		</property>
-		
+		<property name="redisConfigList">
+			<list>
+				<bean class="com.yesmynet.query.core.dto.RedisConfig">
+					<property name="id" value="derbyDataSourceId"></property>
+                    <property name="name" value="测试redis"></property>
+                    </property>
+				</bean>
+			</list>
+		</property>
+		<property name="resourceRoles">
+			<map>
+				<entry key="derbyDataSourceId">
+					<list>
+						<bean class="com.yesmynet.query.core.dto.Role">
+							<property name="roleCode" value="role_admin"></property>
+						</bean>
+					</list>	
+				</entry>
+			</map>
+		</property>		
+		<!--<property name="configedQuerys">
+			<map>
+				<entry key="">
+					<bean></bean>
+				</entry>
+			</map>
+		</property>
+		  -->
 	</bean>
-
-	<bean id="queryRenderService" class="com.yesmynet.database.query.core.service.impl.QueryRenderServiceImpl" >
-	</bean>
-	<bean id="queryExecutorService" class="com.yesmynet.database.query.core.service.impl.QueryExecutorServiceImpl" >
-	</bean>		
-	
-
 </beans>
