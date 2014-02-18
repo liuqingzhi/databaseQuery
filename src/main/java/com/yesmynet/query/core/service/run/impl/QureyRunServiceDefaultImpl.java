@@ -47,7 +47,7 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	 */
 	private Map<String,List<Role>> resourceRoles;
 	@Override
-	public QueryDefinition show(String queryId) {
+	public QueryDefinition getQueryDefinition(String queryId) {
 		QueryDefinition re = null;
 		Environment environment = getEnvironment();
 		QueryService queryService = configedQuerys.get(queryId);

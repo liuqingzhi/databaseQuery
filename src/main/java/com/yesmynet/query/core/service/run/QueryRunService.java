@@ -23,7 +23,7 @@ public interface QueryRunService
 	 * @param queryId
 	 * @return
 	 */
-	public QueryDefinition show(String queryId);
+	public QueryDefinition getQueryDefinition(String queryId);
 	/**
 	 * 运行一个查询
 	 * @param queryId 要运行的查询的ID
