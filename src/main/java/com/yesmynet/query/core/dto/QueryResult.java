@@ -13,7 +13,7 @@ public class QueryResult extends BaseDto
 	/**
 	 * 要使用流输出的查询结果
 	 */
-	private OutputStream contentStream;
+	private InputStream contentInputStream;
 	/**
 	 * 要直接显示的查询结果
 	 */
@@ -25,12 +25,16 @@ public class QueryResult extends BaseDto
 	 * 
 	 */
 	private Boolean onlyShowContent;
+	/**
+	 * 运行查询时出现的异常
+	 */
+	private Exception exception;
 
-	public OutputStream getContentStream() {
-		return contentStream;
+	public InputStream getContentInputStream() {
+		return contentInputStream;
 	}
-	public void setContentStream(OutputStream contentStream) {
-		this.contentStream = contentStream;
+	public void setContentInputStream(InputStream contentInputStream) {
+		this.contentInputStream = contentInputStream;
 	}
 	public String getContent()
     {
@@ -47,5 +51,11 @@ public class QueryResult extends BaseDto
 	public void setOnlyShowContent(Boolean onlyShowContent)
 	{
 		this.onlyShowContent = onlyShowContent;
+	}
+	public Exception getException() {
+		return exception;
+	}
+	public void setException(Exception exception) {
+		this.exception = exception;
 	}
 }

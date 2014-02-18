@@ -9,7 +9,7 @@
 		<property name="expectedDatabaseVersion" value="1"></property>
 		
 	</bean>
-	<bean id="" class="com.yesmynet.query.core.service.run.impl.QureyRunServiceDefaultImpl">
+	<bean id="qureyRunService" class="com.yesmynet.query.core.service.run.impl.QureyRunServiceDefaultImpl">
 		<property name="dataSourceConfigList">
 			<list>
 				<bean class="com.yesmynet.query.core.dto.DataSourceConfig">
@@ -72,4 +72,5 @@
 		</property>
 		  -->
 	</bean>
+	<bean id="queryRenderService" class="com.yesmynet.query.http.service.QueryRenderService"></bean>
 </beans>

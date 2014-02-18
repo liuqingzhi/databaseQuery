@@ -77,22 +77,29 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	}
 	@Override
 	public QueryResult run(String queryId) {
-		QueryResult re =null;
-		Environment environment = getEnvironment();
-		QueryService query = configedQuerys.get(queryId);
-		if(query==null)
-		{
-			QueryDefinition queryDefinitionFromDB = getQueryDefinitionFromDB(queryId);
-			query=getQueryInstanceFromGroovyCode(queryDefinitionFromDB.getId(),queryDefinitionFromDB.getJavaCode());
+		QueryResult re =new QueryResult();
+		
+		try {
+			Environment environment = getEnvironment();
+			QueryService query = configedQuerys.get(queryId);
+			if(query==null)
+			{
+				QueryDefinition queryDefinitionFromDB = getQueryDefinitionFromDB(queryId);
+				query=getQueryInstanceFromGroovyCode(queryDefinitionFromDB.getId(),queryDefinitionFromDB.getJavaCode());
+			}
+			if(query!=null)
+			{
+				re=query.doInQuery(getResourceHolder(environment), environment);
+			}
+			else
+			{
+				throw new ServiceException("没有找到指定的查询，id="+queryId);
+			}
+		} catch (Exception e) {
+			re.setException(e);
+			logger.debug("运行查询时出现了异常,queryId="+queryId,e);
 		}
-		if(query!=null)
-		{
-			re=query.doInQuery(getResourceHolder(environment), environment);
-		}
-		else
-		{
-			throw new ServiceException("没有找到指定的查询，id="+queryId);
-		}
+		
 		return re;
 	}
 	/**
