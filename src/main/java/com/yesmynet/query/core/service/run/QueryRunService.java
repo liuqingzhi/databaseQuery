@@ -29,5 +29,5 @@ public interface QueryRunService
 	 * @param queryId 要运行的查询的ID
 	 * @return 查询结果，其中包含了查询的定义
 	 */
-	public QueryResult run(String queryId);
+	public QueryResult run(QueryDefinition queryDefinition);
 }

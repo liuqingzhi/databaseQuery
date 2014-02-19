@@ -55,7 +55,7 @@ public class QueryController {
 	    String queryExecuteExceptionString=null;
 	    if(executeQuery)
 	    {
-	    	queryResult = queryRunService.run(queryId);
+	    	queryResult = queryRunService.run(queryDefinition);
 	    }
 	    if(queryResult!=null )
         {
