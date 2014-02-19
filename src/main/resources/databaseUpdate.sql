@@ -23,7 +23,7 @@ CREATE TABLE m_sys_query_parameter
 	title VARCHAR(200),/*名称*/
 	description VARCHAR(1000),/*描述*/
 	html_Type VARCHAR(200),/*显示参数的html输入框的方式，如：单选文本框、多行文本框*/
-	custom_Name  VARCHAR(200),/*自定义的查询参数名称,就是在http请求时的parameter名字*/
+	name  VARCHAR(200),/*自定义的查询参数名称,就是在http请求时的parameter名字*/
 	style  VARCHAR(2000),/*css 样式*/
 	style_class VARCHAR(2000),/*css class*/
 	show SMALLINT DEFAULT 1,/*是否显示,1显示，0不显示*/

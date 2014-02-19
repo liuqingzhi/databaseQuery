@@ -10,6 +10,7 @@
 		
 	</bean>
 	<bean id="qureyRunService" class="com.yesmynet.query.core.service.run.impl.QureyRunServiceDefaultImpl">
+		<property name="sqlMapClient" ref="sqlMapClient"></property>
 		<property name="dataSourceConfigList">
 			<list>
 				<bean class="com.yesmynet.query.core.dto.DataSourceConfig">
@@ -48,7 +49,6 @@
 				<bean class="com.yesmynet.query.core.dto.RedisConfig">
 					<property name="id" value="derbyDataSourceId"></property>
                     <property name="name" value="测试redis"></property>
-                    </property>
 				</bean>
 			</list>
 		</property>

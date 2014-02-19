@@ -3,7 +3,7 @@
 <sqlMap>
 	
 	<!--得到查询定义-->
-	<resultMap id="queryResult" class="com.yesmynet.database.query.core.dto.QueryDefinition">
+	<resultMap id="queryResult" class="com.yesmynet.query.core.dto.QueryDefinition">
         <result property="id"  column="id"/>
         <result property="name"  column="name"/>
         <result property="description"  column="description"/>
@@ -13,22 +13,16 @@
         <result property="parameters" column="id" select="getQueryParameters" />
     </resultMap>
 	<!--得到查询定义的参数-->
-	<resultMap id="queryParameterResult" class="com.yesmynet.database.query.core.dto.Parameter">
+	<resultMap id="queryParameterResult" class="com.yesmynet.query.core.dto.Parameter">
         <result property="queryDefinition.id"  column="query_id"/>
         <result property="id"  column="id"/>
         <result property="parameterInput.id"  column="id"/>
         <result property="parameterInput.title"  column="title"/>
         <result property="parameterInput.description"  column="description"/>
         <result property="parameterInput.htmlType"  column="html_Type"/>
-        <result property="parameterInput.customName"  column="custom_Name"/>
+        <result property="parameterInput.name"  column="name"/>
         <result property="parameterInput.style"  column="style"/>
         <result property="parameterInput.styleClass"  column="style_class"/>
-    </resultMap>
-	<!--得到参数使用的验证器-->
-	<resultMap id="parameterValidatorRecordDtoResult" class="com.yesmynet.database.query.core.dto.ParameterValidatorRecordDto">
-        <result property="id"  column="id"/>
-        <result property="parameterId"  column="parameter_id"/>
-        <result property="validatorType"  column="validator_type"/>
     </resultMap>
     
 	<!--得到查询-->
@@ -44,14 +38,14 @@
     </select>
     
     <!--更新查询-->
-    <update id="updateQueryDefinition" parameterClass="com.yesmynet.database.query.core.dto.QueryDefinition" >
+    <update id="updateQueryDefinition" parameterClass="com.yesmynet.query.core.dto.QueryDefinition" >
 		UPDATE m_sys_query set 
 		name=#name#,description=#description#,after_Parameter_Html=#afterParameterHtml:VARCHAR#,show_Execute_Button=#showExecuteButton#,finished=#finished#,
 		java_code=#javaCode#,last_update_time=CURRENT_TIMESTAMP
 		where id=#id#
 	</update>
     <!--插入查询-->
-    <insert id="insertQueryDefinition" parameterClass="com.yesmynet.database.query.core.dto.QueryDefinition" >
+    <insert id="insertQueryDefinition" parameterClass="com.yesmynet.query.core.dto.QueryDefinition" >
 		insert into m_sys_query (name,description,after_Parameter_Html,show_Execute_Button,system_init_create,system_default,finished,java_code,last_update_time)
 		values
 		(#name:VARCHAR#,#description:VARCHAR#,#afterParameterHtml:VARCHAR#,#showExecuteButton#,0,0,#finished#,#javaCode:CLOB#,CURRENT_TIMESTAMP)
@@ -74,16 +68,16 @@
 	</delete>
 	
     <!--更新查询定义的参数-->
-    <update id="updateQueryParameter" parameterClass="com.yesmynet.database.query.core.dto.Parameter" >
+    <update id="updateQueryParameter" parameterClass="com.yesmynet.query.core.dto.Parameter" >
 		UPDATE m_sys_query_parameter set 
-		title=#parameterInput.title#,description=#parameterInput.description#,html_Type=#parameterInput.htmlType#,custom_Name=#parameterInput.customName#,STYLE=#parameterInput.style#,style_class=#parameterInput.styleClass#,LAST_UPDATE_TIME=CURRENT_TIMESTAMP
+		title=#parameterInput.title#,description=#parameterInput.description#,html_Type=#parameterInput.htmlType#,name=#parameterInput.name#,STYLE=#parameterInput.style#,style_class=#parameterInput.styleClass#,LAST_UPDATE_TIME=CURRENT_TIMESTAMP
 		where id=#id:INTEGER#
 	</update>
     <!--插入查询定义的参数-->
-    <update id="insertQueryParameter" parameterClass="com.yesmynet.database.query.core.dto.Parameter" >
-		insert into m_sys_query_parameter (query_id,title,description,html_Type,custom_Name,STYLE,style_class,LAST_UPDATE_TIME)
+    <update id="insertQueryParameter" parameterClass="com.yesmynet.query.core.dto.Parameter" >
+		insert into m_sys_query_parameter (query_id,title,description,html_Type,name,STYLE,style_class,LAST_UPDATE_TIME)
 		values
-		(#queryDefinition.id:INTEGER#,#parameterInput.title#,#parameterInput.description#,#parameterInput.htmlType#,#parameterInput.customName#,#parameterInput.style#,#parameterInput.styleClass:VARCHAR#,CURRENT_TIMESTAMP) 
+		(#queryDefinition.id:INTEGER#,#parameterInput.title#,#parameterInput.description#,#parameterInput.htmlType#,#parameterInput.name#,#parameterInput.style#,#parameterInput.styleClass:VARCHAR#,CURRENT_TIMESTAMP) 
 	</update>
 	
 	<!--删除参数使用的一个验证器的相关数据-->
@@ -95,30 +89,12 @@
 	<delete id="deleteParameterValidator" parameterClass="java.util.Map">
 		delete from m_sys_parameter_validator where parameter_id=#parameterId:INTEGER# and validator_type=#validatorType#
 	</delete>
-	<!--新插入一条参数使用的验证器-->
-    <insert id="saveParameterValidator" parameterClass="com.yesmynet.database.query.core.dto.ParameterValidatorRecordDto">
-		insert into m_sys_parameter_validator (parameter_id,validator_type)
-		values
-		(#parameterId:INTEGER#,#validatorType:VARCHAR#)
-		
-		<selectKey type="post" keyProperty="id" resultClass="java.lang.String" >
-    		values IDENTITY_VAL_LOCAL()
-  		</selectKey>
-	</insert>
 	<!--新插入参数验证器的数据-->
     <insert id="saveParameterValidatorData" parameterClass="java.util.Map">
 		insert into m_sys_parameter_validator_data (validator_id,data_key,data_value)
 		values
 		(#validatorId:INTEGER#,#dataKey:VARCHAR#,#dataValue:VARCHAR#)
 	</insert>
-	<!--得到参数使用的验证器-->
-    <select id="getParameterValidator" resultMap="parameterValidatorRecordDtoResult" parameterClass="java.util.Map">
-       	select * From m_sys_parameter_validator 
-		where parameter_id=#parameterId:INTEGER# 
-		<isNotEmpty property="validatorType" prepend="">
-			and validator_type=#validatorType:VARCHAR#
-		</isNotEmpty>
-	</select>
 	<!--根据参数验证器的得到验证器使用的数据-->
     <select id="getParameterValidatorData" resultClass="java.util.HashMap" parameterClass="java.util.Map">
        	select * From m_sys_parameter_validator_data 

@@ -3,7 +3,7 @@
 <sqlMap>
     
     <!--检查一下，数据库是否已经初始化了-->
-    <select id="getDBInitedData" resultClass="com.yesmynet.database.query.dto.DBUpdateDTO" parameterClass="java.util.Map">
+    <select id="getDBInitedData" resultClass="com.yesmynet.query.dto.DBUpdateDTO" parameterClass="java.util.Map">
        	select id,current_Version currentVersion,last_update_time lastUpdateTime From m_sys_database_init
     </select>
 	
