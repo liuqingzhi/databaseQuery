@@ -1,6 +1,7 @@
 package com.yesmynet.query.controller;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -11,9 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.service.run.QueryRunService;
@@ -50,6 +53,7 @@ public class QueryController {
 	    boolean executeQuery=(queryExecute==null)?false:true;//是否要执行查询
 	    
 	    QueryDefinition queryDefinition = queryRunService.getQueryDefinition(queryId);
+	    setHttpParameterValue(queryDefinition,request);
 	    String queryHtml = queryRenderService.getQueryHtml(queryDefinition);
 	    QueryResult queryResult =null;
 	    String queryExecuteExceptionString=null;
@@ -81,6 +85,32 @@ public class QueryController {
 	    
 		return viewName;
     }
+	/**
+	 * 把httpRequest中请求的参数值设置到查询的参数中
+	 * @param queryParameters
+	 */
+	private void setHttpParameterValue(QueryDefinition queryParameters,HttpServletRequest request)
+	{
+	    if(queryParameters!=null)
+	    {
+	        List<Parameter> parameters = queryParameters.getParameters();
+	        if(!CollectionUtils.isEmpty(parameters))
+	        {
+	            for(Parameter p:parameters)
+	            {
+	                String parameterName = p.getParameterInput().getName();
+	                String[] parameterValue = request.getParameterValues(parameterName);
+	                p.getParameterInput().setValue(parameterValue);
+	            }
+	        }    
+	    }
+		
+	}
+	/**
+	 * 把exception转成string以帮助打印
+	 * @param e
+	 * @return
+	 */
 	private String printException(Exception e)
 	{
 	    String re="";
