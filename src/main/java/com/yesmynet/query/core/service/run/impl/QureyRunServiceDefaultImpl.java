@@ -18,12 +18,16 @@ import org.springframework.util.StringUtils;
 
 import com.yesmynet.query.core.dto.DataSourceConfig;
 import com.yesmynet.query.core.dto.Environment;
+import com.yesmynet.query.core.dto.Parameter;
+import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.dto.RedisConfig;
 import com.yesmynet.query.core.dto.Role;
+import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.dto.User;
 import com.yesmynet.query.core.exception.ServiceException;
+import com.yesmynet.query.core.service.ParameterOptionGetter;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.QueryShowListner;
@@ -47,6 +51,10 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	 * 资源ID和允许访问该ID资源的角色
 	 */
 	private Map<String,List<Role>> resourceRoles;
+	/**
+	 * 配置的所有可用的选项获取器
+	 */
+	private Map<String,ParameterOptionGetter> optionGetters=new HashMap<String,ParameterOptionGetter>();
 	@Override
 	public QueryDefinition getQueryDefinition(String queryId) {
 		QueryDefinition re = null;
@@ -68,11 +76,15 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		{
 			QueryDefinitionGetter queryDefinitionGetter=(QueryDefinitionGetter)queryService;
 			re=queryDefinitionGetter.getQueryDefinition();
+			re.setId(queryId);//因为这里得到查询定义后，后面运行时，会根据Id进行处理，所以要把ID设置正确
+			
 		}
+		ResourceHolder resourceHolder = getResourceHolder(environment.getUser());
+		settingParameterOptions(re,resourceHolder,environment);
 		if(queryService instanceof QueryShowListner)
 		{
 			QueryShowListner listner=(QueryShowListner)queryService;
-			listner.beforeShow(getResourceHolder(environment), environment);
+			listner.beforeShow(resourceHolder, environment);
 		}
 		return re;
 	}
@@ -89,7 +101,7 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 			}
 			if(query!=null)
 			{
-				re=query.doInQuery(queryDefinition,getResourceHolder(environment), environment);
+				re=query.doInQuery(queryDefinition,getResourceHolder(environment.getUser()), environment);
 			}
 			else
 			{
@@ -101,6 +113,35 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		}
 		
 		return re;
+	}
+	/**
+	 * 设置参数的选项
+	 * @param queryDefinition 查询定义
+	 * @param resourceHolder 当前用户可操作的资源
+	 * @param environment 当前的环境
+	 */
+	private void settingParameterOptions(QueryDefinition queryDefinition,ResourceHolder resourceHolder,Environment environment)
+	{
+		List<Parameter> parameters = queryDefinition.getParameters();
+		if(!CollectionUtils.isEmpty(parameters))
+		{
+			ResourceHolder systemResourceHolder = getSystemResourceHolder();
+			for(Parameter param:parameters)
+			{
+				ParameterInput parameterInput = param.getParameterInput();
+				String optionGetterKey = parameterInput.getOptionGetterKey();
+				if(StringUtils.hasText(optionGetterKey))
+				{
+					ParameterOptionGetter parameterOptionGetter = optionGetters.get(optionGetterKey);
+					if(parameterOptionGetter!=null)
+					{
+						List<SelectOption> options = parameterOptionGetter.getOptions(parameterInput, systemResourceHolder, resourceHolder, environment);
+						parameterInput.setOptionValues(options);
+					}
+					
+				}
+			}
+		}
 	}
 	/**
 	 * 从数据库得到查询的配置
@@ -135,12 +176,20 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		return myObject;
 	}
 	/**
-	 * 得到资源持有者
+	 * 得到系统中所有的资源
 	 * @return
 	 */
-	private ResourceHolder getResourceHolder(Environment environment)
+	private ResourceHolder getSystemResourceHolder()
 	{
-		User user = environment.getUser();
+		ResourcesHolderImpl re=new ResourcesHolderImpl(dataSourceConfigList,redisConfigList);
+		return re;
+	}
+	/**
+	 * 得到当前用户可操作的资源
+	 * @return
+	 */
+	private ResourceHolder getResourceHolder(User user)
+	{
 		List<DataSourceConfig> dataSources = getDataSources(user);
 		List<RedisConfig> redisConfigs = getRedisConfigs(user);
 		ResourcesHolderImpl re=new ResourcesHolderImpl(dataSources,redisConfigs);
@@ -281,5 +330,11 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	}
 	public void setResourceRoles(Map<String, List<Role>> resourceRoles) {
 		this.resourceRoles = resourceRoles;
+	}
+	public Map<String, ParameterOptionGetter> getOptionGetters() {
+		return optionGetters;
+	}
+	public void setOptionGetters(Map<String, ParameterOptionGetter> optionGetters) {
+		this.optionGetters = optionGetters;
 	}
 }

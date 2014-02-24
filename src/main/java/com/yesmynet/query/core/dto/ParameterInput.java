@@ -6,6 +6,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.yesmynet.query.core.service.ParameterOptionGetter;
 import com.yesmynet.query.utils.MessageFormatUtils;
 
 
@@ -55,32 +56,31 @@ public class ParameterInput extends BaseDto
      * 是否擦除提交的值，如果为true 表示擦除，即不回显
      */
     private Boolean eraseValue;
+    /**
+     * 选项的获取器的Key值，用这个值得到合适的{@link com.yesmynet.query.core.service.ParameterOptionGetter}对象。
+     */
+    private String optionGetterKey;
     
     public String getTitle()
     {
         return title;
     }
-
     public void setTitle(String title)
     {
         this.title = title;
     }
-
     public String getDescription()
     {
         return description;
     }
-
     public void setDescription(String description)
     {
         this.description = description;
     }
-
     public ParameterHtmlType getHtmlType()
     {
         return htmlType;
     }
-
     public void setHtmlType(ParameterHtmlType htmlType)
     {
         this.htmlType = htmlType;
@@ -131,7 +131,13 @@ public class ParameterInput extends BaseDto
     {
         this.eraseValue = eraseValue;
     }
-    /**
+	public String getOptionGetterKey() {
+		return optionGetterKey;
+	}
+	public void setOptionGetterKey(String optionGetterKey) {
+		this.optionGetterKey = optionGetterKey;
+	}
+	/**
      * 转成html代码
      * @return
      */

@@ -23,7 +23,7 @@
 					           <value>oracle.jdbc.driver.OracleDriver</value>
 					       </property>
 					       <property name="url">
-					           <value>jdbc:oracle:thin:@127.0.0.1:1521:haijie</value>
+					           <value>jdbc:oracle:thin:@10.1.8.137:1521:mydev</value>
 					       </property>
 					       <property name="username">
 					           <value>sc</value>
@@ -63,14 +63,26 @@
 				</entry>
 			</map>
 		</property>		
-		<!--<property name="configedQuerys">
+		<property name="configedQuerys">
 			<map>
-				<entry key="">
-					<bean></bean>
+				<entry key="dqQuery">
+					<bean class="com.yesmynet.query.service.impl.QueryDefaultImpl">
+					</bean>
 				</entry>
 			</map>
 		</property>
-		  -->
+		<property name="optionGetters">
+			<map>
+				<entry key="resourceOption">
+					<bean class="com.yesmynet.query.core.service.run.impl.optiongetter.ResourceOptionGetter">
+						<property name="resourceType" value="DB"></property>
+						<property name="generateAnEmptyOption" value="true"></property>
+					</bean>
+				</entry>
+			</map>
+		</property>
+		
+		
 	</bean>
 	<bean id="queryRenderService" class="com.yesmynet.query.http.service.QueryRenderService"></bean>
 </beans>

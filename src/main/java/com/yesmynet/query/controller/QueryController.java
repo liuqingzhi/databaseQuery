@@ -56,7 +56,7 @@ public class QueryController {
 	    setHttpParameterValue(queryDefinition,request);
 	    String queryHtml = queryRenderService.getQueryHtml(queryDefinition);
 	    QueryResult queryResult =null;
-	    String queryExecuteExceptionString=null;
+	    String queryExecuteExceptionString="";
 	    if(executeQuery)
 	    {
 	    	queryResult = queryRunService.run(queryDefinition);
