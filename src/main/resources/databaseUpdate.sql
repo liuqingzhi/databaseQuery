@@ -26,6 +26,7 @@ CREATE TABLE m_sys_query_parameter
 	name  VARCHAR(200),/*自定义的查询参数名称,就是在http请求时的parameter名字*/
 	style  VARCHAR(2000),/*css 样式*/
 	style_class VARCHAR(2000),/*css class*/
+	option_getter_Key  VARCHAR(200),/*查询参数选项的获取器的Key,用于为参数生成选项的*/
 	show SMALLINT DEFAULT 1,/*是否显示,1显示，0不显示*/
 	last_update_time TIMESTAMP/*上次更新时间*/
 	)

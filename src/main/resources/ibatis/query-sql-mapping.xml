@@ -23,6 +23,8 @@
         <result property="parameterInput.name"  column="name"/>
         <result property="parameterInput.style"  column="style"/>
         <result property="parameterInput.styleClass"  column="style_class"/>
+        <result property="parameterInput.optionGetterKey"  column="option_getter_Key"/>
+        
     </resultMap>
     
 	<!--得到查询-->
