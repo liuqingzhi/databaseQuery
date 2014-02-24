@@ -1,5 +1,5 @@
 <%@page pageEncoding="GBK" contentType="text/html; charset=GBK" %>
-<%@ include file="/WEB-INF/jsp/include.jsp" %>
 
 <%-- Redirected because we can't set the welcome page to a virtual URL. --%>
-<c:redirect url="/hello.htm"/>
+这是首页
+<a href="query.do">查询数据</a>

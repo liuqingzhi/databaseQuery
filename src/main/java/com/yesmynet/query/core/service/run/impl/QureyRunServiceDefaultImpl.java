@@ -4,6 +4,7 @@ import groovy.lang.GroovyClassLoader;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	/**
 	 * 配置的一些查询的实现
 	 */
-	Map<String,QueryService> configedQuerys;
+	Map<String,QueryService> configedQuerys=new HashMap<String,QueryService>();
 	/**
 	 * 所有数据库资源
 	 */
