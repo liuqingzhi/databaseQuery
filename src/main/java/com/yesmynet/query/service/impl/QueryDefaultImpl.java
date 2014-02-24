@@ -448,6 +448,13 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     			"		\n"+
     			"		\n"+
     			"	});\n"+
+    			"	$(\"[name='sqlCode']\").click(function(eventObject) {\n"+
+    			"		var selectedSqlInput=$(\"input[name='selectedSql']\") \n"+
+    			"		selectedSqlInput.val('');\n"+
+    			"		\n"+
+    			"	});\n"+
+    			
+    			
     			"</script>\n"+
     			"";
     	return re;
