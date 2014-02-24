@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.yesmynet.query.core.dto.Parameter;
@@ -51,6 +52,13 @@ public class QueryController {
 		String queryId=request.getParameter(SystemParameterName.QueryId.getParamerName());//要使用的查询的ID
 	    String queryExecute=request.getParameter(SystemParameterName.QueryExecute.getParamerName());//是否要执行查询
 	    boolean executeQuery=(queryExecute==null)?false:true;//是否要执行查询
+	    
+	    if(!StringUtils.hasText(queryId))
+	    {
+	    	viewName="showQueryError";
+	    	model.addAttribute("errorMsg", "无法显示查询，请输入正确的查询ID");
+	    	return viewName;
+	    }
 	    
 	    QueryDefinition queryDefinition = queryRunService.getQueryDefinition(queryId);
 	    setHttpParameterValue(queryDefinition,request);
