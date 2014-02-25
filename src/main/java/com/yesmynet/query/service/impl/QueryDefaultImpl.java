@@ -867,7 +867,6 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 		QueryDefinition queryDefinition=new QueryDefinition();
         List<Parameter> parameters=new ArrayList<Parameter>(); 
         
-        
         StringBuilder paramJsons=new StringBuilder();
         
         paramJsons.append("[");
@@ -880,17 +879,12 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
         paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"查询命令\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"command\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
         paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"查询按钮\",\"description\":\"\",\"htmlType\":\"Button\",\"name\":\"queryButton\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":\"onclick='$(\\\"#queryForm\\\").submit();'\",\"id\":null},\"validatorRules\":null,\"id\":null}");
         
-        
         paramJsons.append("]");
         
-        Type collectionType = new TypeToken<List<Parameter>>(){}.getType();
-        parameters = gson.fromJson(paramJsons.toString(), collectionType);
+        parameters = QueryUtils.getParametersFromJson(paramJsons.toString());
         queryDefinition.setParameters(parameters);
-        
-        
-        
+
         return queryDefinition;
-	    
 	}
     public QueryDefinition getQueryDefinition()
     {

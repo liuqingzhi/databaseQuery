@@ -1,15 +1,21 @@
 package com.yesmynet.query.utils;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.ParameterInput;
+import com.yesmynet.query.core.dto.QueryDefinition;
 
 public class QueryUtils {
-
+	private static Gson gson = new GsonBuilder().serializeNulls().create();
 	/**
      * 根据参数名称得到参数的值 
      * @param parameterMap 查询定义的所有参数
@@ -57,4 +63,15 @@ public class QueryUtils {
     	}
     	return re;
     }
+    /**
+	 * 把JSON字符串转成一个List<Parameter>对象。
+	 * @return
+	 */
+	public static List<Parameter> getParametersFromJson(String jsonList)
+	{
+        Type collectionType = new TypeToken<List<Parameter>>(){}.getType();
+        List<Parameter> fromJson = gson.fromJson(jsonList, collectionType);
+        
+        return fromJson;
+	}
 }
