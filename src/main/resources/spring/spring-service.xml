@@ -67,6 +67,12 @@
 			<map>
 				<entry key="dqQuery">
 					<bean class="com.yesmynet.query.service.impl.QueryDefaultImpl">
+						<property name="databaseDialectServices">
+							<list>
+								<bean class="com.yesmynet.query.service.DatabseDialectService$1">
+								</bean>
+							</list>
+						</property>
 					</bean>
 				</entry>
 			</map>
