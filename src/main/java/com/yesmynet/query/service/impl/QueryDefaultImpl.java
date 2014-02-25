@@ -1,10 +1,12 @@
 package com.yesmynet.query.service.impl;
 
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,8 +52,16 @@ import org.springframework.util.StringUtils;
 
 
 
+
+
+
+
+
+
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.yesmynet.query.core.dto.DataSourceConfig;
 import com.yesmynet.query.core.dto.DatabaseDialect;
 import com.yesmynet.query.core.dto.Environment;
@@ -76,6 +86,8 @@ import com.yesmynet.query.utils.dto.SqlDto;
  */
 public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
 {
+	 private Gson gson = new GsonBuilder().serializeNulls().create();
+	 
 	Logger logger=LoggerFactory.getLogger(this.getClass());
     /**
      * 关于本查询的设置，包括所有的参数
@@ -122,23 +134,33 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
      * 用户选择的数据库配置的ID，表示要在这个数据库上执行用户输入的SQL
      */
     private final String PARAM_DATABASE_ID="dbId";
+    /**
+     * 是否执行查询的参数，如果本参数有值则执行查询，否则不执行查询
+     */
+    private final String PARAM_EXECUTE_COMMAND="command";
+    
     
     public QueryResult doInQuery(QueryDefinition queryDefinition,ResourceHolder resourceHolder,Environment environment)
     {
-        Gson gson = new GsonBuilder()
-        //.setExclusionStrategies(MyExclusionStrategy)
-        .serializeNulls()
-        .create();
-        
         QueryResult re=new QueryResult();
         List<Parameter> parameters = queryDefinition.getParameters();
         final Map<String,Parameter> parameterMap=new HashMap<String,Parameter>();
         for (Parameter i : parameters) parameterMap.put(i.getParameterInput().getName(),i);
+        
+        String queryExecute=getParameterValue(parameterMap,PARAM_EXECUTE_COMMAND);//是否要执行查询
+	    boolean executeQuery=(queryExecute==null)?false:true;//是否要执行查询
+        
+	    if(!executeQuery)
+	    {
+	    	//没有提交要执行查询的参数，所以不要执行本查询。
+	    	return re;
+	    }
+        
         StringBuilder resultContent=new StringBuilder();
-        String sql=parameterMap.get(PARAM_SQL).getParameterInput().getValue()[0];
-        String selectedSql=parameterMap.get(PARAM_SELECTED_SQL).getParameterInput().getValue()[0];
-        final Boolean ajaxRequest=StringUtils.hasText(parameterMap.get(PARAM_REQUEST_BY_AJAX).getParameterInput().getValue()[0]);
-        String dbId = parameterMap.get(PARAM_DATABASE_ID).getParameterInput().getValue()[0];
+        String sql=parameterMap.get(PARAM_SQL).getParameterInput().getValues()[0];
+        String selectedSql=parameterMap.get(PARAM_SELECTED_SQL).getParameterInput().getValues()[0];
+        final Boolean ajaxRequest=StringUtils.hasText(parameterMap.get(PARAM_REQUEST_BY_AJAX).getParameterInput().getValues()[0]);
+        String dbId = parameterMap.get(PARAM_DATABASE_ID).getParameterInput().getValues()[0];
         sql=StringUtils.hasText(selectedSql)?selectedSql:sql;//如果选中了sql，则只执行选中的部分
         List<SqlDto> sqlList=SqlSplitUtils.splitSql(sql);
         
@@ -222,6 +244,31 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
         re.setContent(resultContent.toString());
         re.setOnlyShowContent(ajaxRequest);
         return re;
+    }
+    /**
+     * 得到参数的值 
+     * @param parameterMap 所有参数的map
+     * @param parameterName 要得到值的参数名称
+     * @return
+     */
+    private String getParameterValue(Map<String,Parameter> parameterMap,String parameterName)
+    {
+    	String re=null;
+    	Parameter parameter = parameterMap.get(parameterName);
+    	if(parameter!=null)
+    	{
+    		ParameterInput parameterInput = parameter.getParameterInput();
+    		if(parameterInput!=null)
+    		{
+    			String[] value = parameterInput.getValues();
+    			if(value!=null && value.length>0)
+    			{
+    				re=value[0];			
+    			}
+    			
+    		}
+    	}
+    	return re;
     }
     /**
      * 根据用户选择的数据库ID得到数据库
@@ -549,7 +596,7 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     	Parameter parameter = parameterMap.get(parameterName);
 		if(parameter!=null)
 		{
-			String pageSizeStr = parameter.getParameterInput().getValue()[0];
+			String pageSizeStr = parameter.getParameterInput().getValues()[0];
 			try
 			{
 				re=Long.parseLong(pageSizeStr);
@@ -1023,77 +1070,27 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
 		QueryDefinition queryDefinition=new QueryDefinition();
         List<Parameter> parameters=new ArrayList<Parameter>(); 
         
+        
+        StringBuilder paramJsons=new StringBuilder();
+        
+        paramJsons.append("[");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"SQL脚本\",\"description\":\"功能提示：1、可以使用F8执行SQL；2、可以选中一部分SQL执行，然后执行。\",\"htmlType\":\"TextArea\",\"name\":\"sqlCode\",\"style\":\"width: 1000px; height: 200px;\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"每页显示的记录数\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"pageSize\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"当前页码\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"currentPage\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"是否为ajax请求\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"ajaxRequest\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"选中的sql\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"selectedSql\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":true,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"数据库\",\"description\":\"\",\"htmlType\":\"Select\",\"name\":\"dbId\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":\"resourceOption\",\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"查询命令\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"command\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
+        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"查询按钮\",\"description\":\"\",\"htmlType\":\"Button\",\"name\":\"queryButton\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":\"onclick='$(\\\"#queryForm\\\").submit();'\",\"id\":null},\"validatorRules\":null,\"id\":null}");
+        
+        
+        paramJsons.append("]");
+        
+        Type collectionType = new TypeToken<List<Parameter>>(){}.getType();
+        parameters = gson.fromJson(paramJsons.toString(), collectionType);
         queryDefinition.setParameters(parameters);
         
         
-        //queryDefinition.setId("-1");
-        queryDefinition.setName("数据库查询");
-        queryDefinition.setDescription("系统实现的数据库查询");
-        queryDefinition.setAfterParameterHtml("");//显示完所有参数后要显示的html,现在还没有
-        queryDefinition.setShowExecuteButton(true);
-        
-        Parameter p1=new Parameter();
-        ParameterInput p1Input=new ParameterInput();
-        p1.setParameterInput(p1Input);
-        p1.getParameterInput().setTitle("SQL脚本");
-        p1.getParameterInput().setDescription("功能提示：1、可以使用F8执行SQL；2、可以选中一部分SQL执行，然后执行。");//参数的描述，可以显示在界面的
-        p1.getParameterInput().setHtmlType(ParameterHtmlType.TextArea);
-        p1.getParameterInput().setName(PARAM_SQL);
-        p1.getParameterInput().setStyle("width: 1000px; height: 200px;");
-        
-        Parameter p2=new Parameter();
-        ParameterInput p2Input=new ParameterInput();
-        p2.setParameterInput(p2Input);
-        p2.getParameterInput().setTitle("每页显示的记录数");
-        p2.getParameterInput().setDescription("");
-        p2.getParameterInput().setHtmlType(ParameterHtmlType.InputHidden);
-        p2.getParameterInput().setName(PARAM_PAGE_SIZE);
-        p2.getParameterInput().setStyle("");
-        
-        Parameter p3=new Parameter();
-        ParameterInput p3Input=new ParameterInput();
-        p3.setParameterInput(p3Input);
-        p3.getParameterInput().setTitle("当前页码");
-        p3.getParameterInput().setDescription("");
-        p3.getParameterInput().setHtmlType(ParameterHtmlType.InputHidden);
-        p3.getParameterInput().setName(PARAM_CURRENT_PAGE);
-        p3.getParameterInput().setStyle("");
-        
-        Parameter p4=new Parameter();
-        ParameterInput p4Input=new ParameterInput();
-        p4.setParameterInput(p4Input);
-        p4.getParameterInput().setTitle("是否为ajax请求");
-        p4.getParameterInput().setDescription("");
-        p4.getParameterInput().setHtmlType(ParameterHtmlType.InputHidden);
-        p4.getParameterInput().setName(PARAM_REQUEST_BY_AJAX);
-        p4.getParameterInput().setStyle("");
-        
-        Parameter p5=new Parameter();
-        ParameterInput p5Input=new ParameterInput();
-        p5.setParameterInput(p5Input);
-        p5.getParameterInput().setTitle("选中的sql");
-        p5.getParameterInput().setDescription("");
-        p5.getParameterInput().setHtmlType(ParameterHtmlType.InputHidden);
-        p5.getParameterInput().setName(PARAM_SELECTED_SQL);
-        p5.getParameterInput().setStyle("");
-        p5.getParameterInput().setEraseValue(true);
-        
-        Parameter p6=new Parameter();
-        ParameterInput p6Input=new ParameterInput();
-        p6.setParameterInput(p6Input);
-        p6.getParameterInput().setTitle("数据库");
-        p6.getParameterInput().setDescription("");
-        p6.getParameterInput().setHtmlType(ParameterHtmlType.Select);
-        p6.getParameterInput().setName(PARAM_DATABASE_ID);
-        p6.getParameterInput().setOptionGetterKey("resourceOption");
-        //p6.getParameterInput().setOptionValues();
-        
-        parameters.add(p1);
-        parameters.add(p2);
-        parameters.add(p3);
-        parameters.add(p4);
-        parameters.add(p5);
-        parameters.add(p6);
         
         return queryDefinition;
 	    

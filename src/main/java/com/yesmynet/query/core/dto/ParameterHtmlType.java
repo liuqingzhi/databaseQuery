@@ -12,27 +12,31 @@ public  enum ParameterHtmlType
 	/**
 	 * 单行文本框
 	 */
-	InputText("单行文本",true,"<input type=''text'' name=''{1}'' style=''{2}'' class=''{3}'' value=''{0}'' >"),
+	InputText("单行文本",true,"<input type=''text'' name=''{1}'' style=''{2}'' class=''{3}'' value=''{0}'' {4}>"),
 	/**
 	 * 多行文本框
 	 */
-	TextArea("多行文本",true,"<textarea name=''{1}'' style=''{2}'' class=''{3}''>{0}</textarea>"),
+	TextArea("多行文本",true,"<textarea name=''{1}'' style=''{2}'' class=''{3}'' {4}>{0}</textarea>"),
 	/**
      * html中的hidden输入控件 
      */
-    InputHidden("Hidden输入控件",true,"<input type=''hidden'' name=''{1}''  style=''{2}'' class=''{3}'' value=''{0}'' >"),
+    InputHidden("Hidden输入控件",true,"<input type=''hidden'' name=''{1}''  style=''{2}'' class=''{3}'' value=''{0}'' {4}>"),
     /**
      * html中的select输入控件 
      */
-    Select("下拉框",false,"<select name=''{1}''  style=''{2}'' class=''{3}''>{0}</select>"),
+    Select("下拉框",false,"<select name=''{1}''  style=''{2}'' class=''{3}'' {4}>{0}</select>"),
     /**
 	 * 单选radio
 	 */
-	Radio("单选",true,"<input type=''radio'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {5}>{4}</input>\n"),
+	Radio("单选",true,"<input type=''radio'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {4} {6}>{5}</input>\n"),
 	/**
 	 * 多选checkbox
 	 */
-	Checkbox("多选",false,"<input type=''checkbox'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {5}>{4}</input>\n")
+	Checkbox("多选",false,"<input type=''checkbox'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {4} {6}>{5}</input>\n"),
+	/**
+	 * 按钮Button
+	 */
+	Button("按钮",true,"<input type=''button'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {4}/>\n")
     ;
 	/**
 	 * 显示在界面上的类型名称

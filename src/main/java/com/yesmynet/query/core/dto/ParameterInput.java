@@ -1,5 +1,6 @@
 package com.yesmynet.query.core.dto;
 
+import java.awt.Button;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -18,6 +19,10 @@ import com.yesmynet.query.utils.MessageFormatUtils;
 public class ParameterInput extends BaseDto
 {
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	/**
      * 标题
      */
     private String title;
@@ -47,7 +52,7 @@ public class ParameterInput extends BaseDto
     /**
      * 参数运行时的值
      */
-    private String[] value;
+    private String[] values;
     /**
      * 参数的可选值，对于文本框就是默认值，对于下拉框则可以有多个可选择值
      */
@@ -60,6 +65,12 @@ public class ParameterInput extends BaseDto
      * 选项的获取器的Key值，用这个值得到合适的{@link com.yesmynet.query.core.service.ParameterOptionGetter}对象。
      */
     private String optionGetterKey;
+    /**
+     * 直接在输入框的<input >中输出的内容,最后形成的html如下：<input elementHtml>。
+     * 这种方式用来输出一些javascript，如：把本属性设为onlick='alter("aaa")',则最后生成的
+     * html如下：<input onlick='alter("aaa")'>。
+     */
+    private String elementHtml;
     
     public String getTitle()
     {
@@ -107,13 +118,13 @@ public class ParameterInput extends BaseDto
     {
         this.styleClass = styleClass;
     }
-    public String[] getValue()
+    public String[] getValues()
     {
-        return value;
+        return values;
     }
-    public void setValue(String[] value)
+    public void setValues(String[] values)
     {
-        this.value = value;
+        this.values = values;
     }
     public List<SelectOption> getOptionValues()
     {
@@ -137,6 +148,12 @@ public class ParameterInput extends BaseDto
 	public void setOptionGetterKey(String optionGetterKey) {
 		this.optionGetterKey = optionGetterKey;
 	}
+	public String getElementHtml() {
+		return elementHtml;
+	}
+	public void setElementHtml(String elementHtml) {
+		this.elementHtml = elementHtml;
+	}
 	/**
      * 转成html代码
      * @return
@@ -151,10 +168,16 @@ public class ParameterInput extends BaseDto
         case InputText:
         case TextArea:
         case InputHidden:
-            re=MessageFormatUtils.format(htmlType2.getHtmlTemplate(), getTextInputValue(),parameterName,style,styleClass);
+        case Button:
+        	String inputValue=getValue();
+        	if(ParameterHtmlType.Button.equals(htmlType2))
+        	{
+        		inputValue=getTitle();
+        	}
+            re=MessageFormatUtils.format(htmlType2.getHtmlTemplate(), inputValue,parameterName,style,styleClass,elementHtml);
             break;
         case Select:
-            re=MessageFormatUtils.format(htmlType2.getHtmlTemplate(), getOptions(),parameterName,style,styleClass);
+            re=MessageFormatUtils.format(htmlType2.getHtmlTemplate(), getOptions(),parameterName,style,styleClass,elementHtml);
             break;
         case Radio:
         case Checkbox:
@@ -177,8 +200,8 @@ public class ParameterInput extends BaseDto
         {
             for(SelectOption option:value2)
             {
-                String selected=isOptionSelected(option,this.getValue())?"checked":"";
-                re.append(MessageFormatUtils.format(htmlTemplate, option.getValue(),parameterName,style,styleClass,option.getText(),selected));
+                String selected=isOptionSelected(option,this.getValues())?"checked":"";
+                re.append(MessageFormatUtils.format(htmlTemplate, option.getValue(),parameterName,style,styleClass,elementHtml,option.getText(),selected));
             }
         }
         return re.toString();
@@ -187,11 +210,11 @@ public class ParameterInput extends BaseDto
      * 对于只有一个值的输入框（如：单选文本框，多行文本框等），得到输入的值
      * @return
      */
-    private String getTextInputValue()
+    public String getValue()
     {
         String value2=null;
-        if(!ArrayUtils.isEmpty(this.getValue()))
-            value2=this.getValue()[0];
+        if(!ArrayUtils.isEmpty(this.getValues()))
+            value2=this.getValues()[0];
         
         if(!StringUtils.hasText(value2) || (getEraseValue()!=null && getEraseValue() ))
         {
@@ -221,7 +244,7 @@ public class ParameterInput extends BaseDto
             String optionTempalte="<option value='%1$s' %2$s>%3$s</option>\n";
             for(SelectOption option:value2)
             {
-                String selected=isOptionSelected(option,this.getValue())?"selected":"";
+                String selected=isOptionSelected(option,this.getValues())?"selected":"";
                 String format = String.format(optionTempalte, option.getValue(),selected,option.getText());
                 re.append(format);
             }

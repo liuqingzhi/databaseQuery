@@ -50,8 +50,6 @@ public class QueryController {
     {
 		String viewName="showQuery";
 		String queryId=request.getParameter(SystemParameterName.QueryId.getParamerName());//要使用的查询的ID
-	    String queryExecute=request.getParameter(SystemParameterName.QueryExecute.getParamerName());//是否要执行查询
-	    boolean executeQuery=(queryExecute==null)?false:true;//是否要执行查询
 	    
 	    if(!StringUtils.hasText(queryId))
 	    {
@@ -65,10 +63,7 @@ public class QueryController {
 	    String queryHtml = queryRenderService.getQueryHtml(queryDefinition);
 	    QueryResult queryResult =null;
 	    String queryExecuteExceptionString="";
-	    if(executeQuery)
-	    {
-	    	queryResult = queryRunService.run(queryDefinition);
-	    }
+	    queryResult = queryRunService.run(queryDefinition);
 	    if(queryResult!=null )
         {
         	if(queryResult.getContentInputStream()!=null)
@@ -108,7 +103,7 @@ public class QueryController {
 	            {
 	                String parameterName = p.getParameterInput().getName();
 	                String[] parameterValue = request.getParameterValues(parameterName);
-	                p.getParameterInput().setValue(parameterValue);
+	                p.getParameterInput().setValues(parameterValue);
 	            }
 	        }    
 	    }
