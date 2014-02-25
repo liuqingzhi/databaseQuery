@@ -22,6 +22,45 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * 关于本查询的设置，包括所有的参数
      */
     private QueryDefinition queryDefinition;
+    private enum ParameterName
+    {
+    	Command("是执行的命令","command"),
+    	
+    	QueryDefinitionName("查询的名称","definitionName"),
+    	QueryDefinitionDescription("查询描述","definitionDesc"),
+    	QueryDefinitionJavaCode("查询代码","definitionCode"),
+    	
+    	QueryParameterTitle("参数标题","parameterTitle"),
+    	QueryParameterDescription("参数描述","parameterDescription"),
+    	QueryParameterHtmlType("参数类型","parameterHtmlType"),
+    	QueryParameterName("参数名称","parameterName"),
+    	QueryParameterStyle("参数css","parameterStyle"),
+    	QueryParameterStyleClass("参数css class","parameterStyleClass"),
+    	QueryParameterEraseValue("不回显参数值","parameterEraseValue"),
+    	QueryParameterOptionGetterKey("选项获取器","parameterOptionGetterKey"),
+    	QueryParameterElementHtml("直接html","parameterElementHtml"),
+    	
+    	
+    	;
+    	/**
+    	 * 参数标题
+    	 */
+    	private String title;
+    	/**
+    	 * 参数名称
+    	 */
+    	private String name;
+    	/**
+    	 * 构造函数
+    	 * @param title
+    	 * @param name
+    	 */
+    	private ParameterName(String title,String name)
+    	{
+    		
+    	}
+    }
+    
 	@Override
 	public QueryDefinition getQueryDefinition() {
 		if(this.queryDefinition==null)
