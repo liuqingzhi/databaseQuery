@@ -30,7 +30,6 @@ public class QueryUtils {
     			{
     				re=value[0];			
     			}
-    			
     		}
     	}
     	return re;
