@@ -6,15 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -22,42 +15,11 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.StatementCallback;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,8 +29,6 @@ import com.yesmynet.query.core.dto.DatabaseDialect;
 import com.yesmynet.query.core.dto.Environment;
 import com.yesmynet.query.core.dto.InfoDTO;
 import com.yesmynet.query.core.dto.Parameter;
-import com.yesmynet.query.core.dto.ParameterHtmlType;
-import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
@@ -76,8 +36,8 @@ import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.ResourceHolder;
 import com.yesmynet.query.http.dto.SystemParameterName;
 import com.yesmynet.query.service.DatabseDialectService;
+import com.yesmynet.query.utils.QueryUtils;
 import com.yesmynet.query.utils.SqlSplitUtils;
-import com.yesmynet.query.utils.dto.SignPair;
 import com.yesmynet.query.utils.dto.SqlDto;
 /**
  * 查询的默认实现，就是在界面上显示一个输入sql的多行文本框，用来执行给定的SQL
@@ -144,10 +104,8 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     {
         QueryResult re=new QueryResult();
         List<Parameter> parameters = queryDefinition.getParameters();
-        final Map<String,Parameter> parameterMap=new HashMap<String,Parameter>();
-        for (Parameter i : parameters) parameterMap.put(i.getParameterInput().getName(),i);
         
-        String queryExecute=getParameterValue(parameterMap,PARAM_EXECUTE_COMMAND);//是否要执行查询
+        String queryExecute=QueryUtils.getParameterValue(parameters,PARAM_EXECUTE_COMMAND);//是否要执行查询
 	    boolean executeQuery=(queryExecute==null)?false:true;//是否要执行查询
         
 	    if(!executeQuery)
@@ -157,10 +115,10 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
 	    }
         
         StringBuilder resultContent=new StringBuilder();
-        String sql=getParameterValue(parameterMap,PARAM_SQL);
-        String selectedSql=getParameterValue(parameterMap,PARAM_SELECTED_SQL);
-        final Boolean ajaxRequest=StringUtils.hasText(getParameterValue(parameterMap,PARAM_REQUEST_BY_AJAX));
-        String dbId = getParameterValue(parameterMap,PARAM_DATABASE_ID);
+        String sql=QueryUtils.getParameterValue(parameters,PARAM_SQL);
+        String selectedSql=QueryUtils.getParameterValue(parameters,PARAM_SELECTED_SQL);
+        final Boolean ajaxRequest=StringUtils.hasText(QueryUtils.getParameterValue(parameters,PARAM_REQUEST_BY_AJAX));
+        String dbId = QueryUtils.getParameterValue(parameters,PARAM_DATABASE_ID);
         sql=StringUtils.hasText(selectedSql)?selectedSql:sql;//如果选中了sql，则只执行选中的部分
         List<SqlDto> sqlList=SqlSplitUtils.splitSql(sql);
         
@@ -190,8 +148,8 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
         	{
         		String sqlResult="";
         		String tabShowResultDivId=getRandomString();//getShowResultDivId(i);
-        		Long pageSize=getParameterValue(PARAM_PAGE_SIZE,parameterMap,pageSizeDefault);
-				Long currentPage=getParameterValue(PARAM_CURRENT_PAGE,parameterMap,1L);
+        		Long pageSize=getParameterValue(parameters,PARAM_PAGE_SIZE,pageSizeDefault);
+				Long currentPage=getParameterValue(parameters,PARAM_CURRENT_PAGE,1L);
         		try
 				{
 					if(sqlDto.isSelect())
@@ -244,31 +202,6 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
         re.setContent(resultContent.toString());
         re.setOnlyShowContent(ajaxRequest);
         return re;
-    }
-    /**
-     * 得到参数的值 
-     * @param parameterMap 所有参数的map
-     * @param parameterName 要得到值的参数名称
-     * @return
-     */
-    private String getParameterValue(Map<String,Parameter> parameterMap,String parameterName)
-    {
-    	String re=null;
-    	Parameter parameter = parameterMap.get(parameterName);
-    	if(parameter!=null)
-    	{
-    		ParameterInput parameterInput = parameter.getParameterInput();
-    		if(parameterInput!=null)
-    		{
-    			String[] value = parameterInput.getValues();
-    			if(value!=null && value.length>0)
-    			{
-    				re=value[0];			
-    			}
-    			
-    		}
-    	}
-    	return re;
     }
     /**
      * 根据用户选择的数据库ID得到数据库
@@ -523,16 +456,6 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     	return re;
     }
     /**
-     * 得到显示查询结果的div的ID
-     * @param tabListIndex
-     * @return
-     */
-    private String getShowResultDivId(int tabListIndex)
-    {
-    	String re="tabs-"+ tabListIndex +"";
-    	return re;
-    }
-    /**
      * 得到tab选项页的内容
      * @param content
      * @return
@@ -590,104 +513,25 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     }
     /**
      * 根据参数名称得到参数值
-     * @param parameterName
      * @param parameterMap
+     * @param parameterName
      * @return
      */
-    private Long getParameterValue(String parameterName,Map<String,Parameter> parameterMap,Long defaultValue)
+    private Long getParameterValue(List<Parameter> parameterMap,String parameterName,Long defaultValue)
     {
     	Long re=null;
-    	Parameter parameter = parameterMap.get(parameterName);
-		if(parameter!=null)
+		
+		String pageSizeStr = QueryUtils.getParameterValue(parameterMap, parameterName);
+		try
 		{
-			String pageSizeStr = parameter.getParameterInput().getValue();
-			try
-			{
-				re=Long.parseLong(pageSizeStr);
-			}
-			catch (NumberFormatException e)
-			{
-			}
+			re=Long.parseLong(pageSizeStr);
 		}
+		catch (NumberFormatException e)
+		{
+		}
+		
 		if(re==null) re=defaultValue;
 		return re;
-    }
-    /**
-     * 执行select查询，并得到要显示的结果
-     * @param sql
-     * @param pageSize
-     * @param currentPage
-     * @param dataSourceConfig
-     * @return
-     */
-    private String executeSelectSql(String sql,Long pageSize,Long currentPage,DataSourceConfig dataSourceConfig,int sqlIndex,String showResultDivId)
-    {
-    	String re="";
-    	DatabaseDialect databaseDialect = dataSourceConfig.getDatabaseDialect();
-    	DatabseDialectService databaseDialectService = getDatabaseDialectService(databaseDialect);
-    	DataSource datasource2 = dataSourceConfig.getDatasource();
-        JdbcTemplate jdbcTemplate=new JdbcTemplate(datasource2);
-        
-        boolean paging=false;
-        PagingDto pagingInfo=null; 
-        String sqlToExecute=sql;
-        
-    	if(databaseDialectService!=null)
-    	{
-    		String pagingCountSql = getPagingCountSql(sql);
-    		
-            long resultCount = jdbcTemplate.queryForLong(pagingCountSql);
-            if(resultCount>noPageMaxResult)
-            {
-            	//进行分页
-            	pagingInfo = getPagingInfo(resultCount,pageSize,currentPage);
-            	paging=true;
-            	sqlToExecute=databaseDialectService.getPagingSql(databaseDialect, sql, pagingInfo.getRecordBegin(), pagingInfo.getRecordEnd());
-            }
-    	}
-    	final String sqlToExecuteSql=sqlToExecute;
-    	final Long recordBegin=pagingInfo.getRecordBegin();
-    	final Long recordEnd=pagingInfo.getRecordEnd();
-    	
-        re=jdbcTemplate.execute(new StatementCallback<String>(){
-
-            public String doInStatement(Statement stmt)
-                    throws SQLException, DataAccessException
-            {
-                String re="";
-                java.sql.ResultSet rs=null;
-                
-                stmt.execute(sqlToExecuteSql);
-                rs=stmt.getResultSet();
-                try
-                {
-                    re=ShowResultSet(rs,recordBegin,recordEnd);
-                } catch (Exception e)
-                {
-                    throw new RuntimeException(e);
-                }
-                return re;
-            }});
-    	if(paging)
-    	{
-    		//String sqlIndexDivId="sqlPageDiv"+sqlIndex;
-    		//分页了，则显示分页导航
-    		
-    		String showResultDivIdContainer=getRandomString();
-    		//String pageDataDivIdContainer=getRandomString();
-    		String page1=getPageNavigation(pagingInfo,showResultDivIdContainer,true);
-    		String page2=getPageNavigation(pagingInfo,showResultDivIdContainer,false);
-    		String pageDatas=showPagingNavigation(sql,dataSourceConfig,pagingInfo);//,pageDataDivIdContainer);
-    		
-    		re="<div id='"+ showResultDivIdContainer +"'>"+pageDatas+page1+re;
-    		re+=page2;
-    		re+="</div>";
-    		
-            
-    		
-    	}
-    	
-    	return re;
     }
     /**
      * 得到一个随机字符串作为显示查询结果的div的ID，这个ID不能重复，以准备使用ajax更新结果
@@ -819,57 +663,6 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     	}
     	return re;
     }
-    /**
-	 * 得到成对出现的标记的匹配情况。
-	 * @param pairs 所有的标记
-	 * @param sql 源字符串
-	 * @param flag 0表示要得到开始标记的匹配情况，1表示结束标记的匹配情况
-	 * @return
-	 */
-	private String getALLSignPair(Set<SignPair> pairs,int flag)
-	{
-		String allBeginSign = "";
-		
-		int i = 0;
-		for (SignPair p : pairs) {
-			String start ="";
-			if(flag==0)
-				start=p.getStart();
-			else if(flag==1)
-				start=p.getEnd();
-			else
-				throw new RuntimeException("不支持的操作");
-			
-			allBeginSign += start;
-			if (i < pairs.size() - 1)
-			{
-				allBeginSign += "|";
-			}
-
-			i++;
-		}
-		return allBeginSign;
-
-	}
-	/**
-	 * 根据运行时得到的开始标记得到对应的结束标记
-	 * @param start 在sql中得到的开始标记
-	 * @param pairs 所有标记对
-	 * @return 该 start对应的结束标记
-	 */
-	private String getSignPairEnd(String start,Set<SignPair> pairs)
-	{
-		String re="";
-		for(SignPair p:pairs)
-		{
-			if(Pattern.matches(p.getStart(), start))
-			{
-				re=p.getEnd();
-				break;
-			}
-		}
-		return re;
-	}
     /**
      * 显示结果
      * @param rs
