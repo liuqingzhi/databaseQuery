@@ -44,7 +44,7 @@ import com.yesmynet.query.utils.dto.SqlDto;
  * @author 刘庆志
  *
  */
-public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
+public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 {
 	 private Gson gson = new GsonBuilder().serializeNulls().create();
 	 
