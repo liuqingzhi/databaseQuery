@@ -157,10 +157,10 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
 	    }
         
         StringBuilder resultContent=new StringBuilder();
-        String sql=parameterMap.get(PARAM_SQL).getParameterInput().getValues()[0];
-        String selectedSql=parameterMap.get(PARAM_SELECTED_SQL).getParameterInput().getValues()[0];
-        final Boolean ajaxRequest=StringUtils.hasText(parameterMap.get(PARAM_REQUEST_BY_AJAX).getParameterInput().getValues()[0]);
-        String dbId = parameterMap.get(PARAM_DATABASE_ID).getParameterInput().getValues()[0];
+        String sql=getParameterValue(parameterMap,PARAM_SQL);
+        String selectedSql=getParameterValue(parameterMap,PARAM_SELECTED_SQL);
+        final Boolean ajaxRequest=StringUtils.hasText(getParameterValue(parameterMap,PARAM_REQUEST_BY_AJAX));
+        String dbId = getParameterValue(parameterMap,PARAM_DATABASE_ID);
         sql=StringUtils.hasText(selectedSql)?selectedSql:sql;//如果选中了sql，则只执行选中的部分
         List<SqlDto> sqlList=SqlSplitUtils.splitSql(sql);
         
@@ -234,7 +234,7 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
         		resultContent.append(tabContents);
         	}
         	
-        	String pageNavigationScriptFunction = getPageNavigationScriptFunction();
+        	String pageNavigationScriptFunction = getPageNavigationScriptFunction(queryDefinition);
         	resultContent.append(pageNavigationScriptFunction);
         	resultContent.append(getExecuteSelectedSqlScript());
         	
@@ -418,7 +418,7 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
      * 在页面上定义一个javascript函数，以进行分页操作。
      * @return
      */
-    private String getPageNavigationScriptFunction()
+    private String getPageNavigationScriptFunction(QueryDefinition queryDefinition)
     {
     	StringBuilder re=new StringBuilder();
     	
@@ -432,12 +432,16 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     	re.append("			var url=requestContext+\"/query.do\";\n");
     	re.append("			var datasourceId=$(\"#\"+toReplaceContentDivId+\" #SystemDataSourceId\").val();\n");
     	re.append("			var sql=$(\"#\"+toReplaceContentDivId+\" #sqlCode\").val();\n");
+    	re.append("			var queryId='").append(queryDefinition.getId()).append("';\n");
+    	re.append("			var dbId=$(\"[name='").append(PARAM_DATABASE_ID).append("']\").val();\n");
+    	
+    	
     	re.append("			\n");
     	re.append("			$.ajax({\n");
     	re.append("				  type: \"POST\",\n");
     	re.append("				  url: url,\n");
     	re.append("				  dataType:\"html\",\n");
-    	re.append("				  data: { \"SystemQueryExecute\":\"\",\"ajaxRequest\":\"1\",\"SystemDataSourceId\": datasourceId, \"sqlCode\": sql,\"currentPage\":targetPageNum },\n");
+    	re.append("				  data: { \"").append(SystemParameterName.QueryId.getParamerName()).append("\":queryId,\"").append(PARAM_DATABASE_ID).append("\":dbId,\"command\":\"pageExeute\",\"ajaxRequest\":\"1\",\"SystemDataSourceId\": datasourceId, \"sqlCode\": sql,\"currentPage\":targetPageNum },\n");
     	re.append("				  beforeSend:function() {\n");
     	re.append("				  	var ajaxtipImage =$( \"#ajaxtipImage\" );\n");
     	re.append("				  	var ajaxtip=$( \"#ajaxtip\" );\n");
@@ -596,7 +600,7 @@ public class QueryDefaultImpl  implements QueryService,QueryDefinitionGetter
     	Parameter parameter = parameterMap.get(parameterName);
 		if(parameter!=null)
 		{
-			String pageSizeStr = parameter.getParameterInput().getValues()[0];
+			String pageSizeStr = parameter.getParameterInput().getValue();
 			try
 			{
 				re=Long.parseLong(pageSizeStr);
