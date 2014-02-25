@@ -3,6 +3,7 @@ package com.yesmynet.query.http.service;
 import java.util.List;
 
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.QueryDefinition;
@@ -34,10 +35,12 @@ public class QueryRenderService {
 	                
 	            }
 	        }
-	        re.append(query.getAfterParameterHtml());
+	        String afterParameterHtml = query.getAfterParameterHtml();
+	        if(StringUtils.hasText(afterParameterHtml))
+	        	re.append(afterParameterHtml);
 	        
-	        if(query.getShowExecuteButton())
-	            re.append("<input type='submit' value='执行查询' name='executeButton'>");
+	        //if(query.getShowExecuteButton())
+	        //    re.append("<input type='submit' value='执行查询' name='executeButton'>");
 		}
 		
 		return re.toString();
