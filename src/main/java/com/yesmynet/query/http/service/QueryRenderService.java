@@ -15,6 +15,10 @@ import com.yesmynet.query.core.dto.QueryDefinition;
  */
 public class QueryRenderService {
 	/**
+	 * 显示参数的Service
+	 */
+	private ParameterLayoutService parameterLayoutService;
+	/**
 	 * 显示查询
 	 * @param query
 	 * @return
@@ -25,16 +29,9 @@ public class QueryRenderService {
 		if(query!=null)
 		{
 		    List<Parameter> parameters = query.getParameters();
-	        if(!CollectionUtils.isEmpty(parameters))
-	        {
-	            for(Parameter define:parameters)
-	            {
-	                String oneParameterHtml=getParameterHtml(define);
-	                
-	                re.append(oneParameterHtml);
-	                
-	            }
-	        }
+		    String parameterHtml = parameterLayoutService.showParameter(parameters);
+		    re.append(parameterHtml);
+	       
 	        String afterParameterHtml = query.getAfterParameterHtml();
 	        if(StringUtils.hasText(afterParameterHtml))
 	        	re.append(afterParameterHtml);
@@ -55,5 +52,11 @@ public class QueryRenderService {
 		String re="";
 		re=parameter.getParameterInput().toHtml();
 		return re;
+	}
+	public ParameterLayoutService getParameterLayoutService() {
+		return parameterLayoutService;
+	}
+	public void setParameterLayoutService(ParameterLayoutService parameterLayoutService) {
+		this.parameterLayoutService = parameterLayoutService;
 	}
 }

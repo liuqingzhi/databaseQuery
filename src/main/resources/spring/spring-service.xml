@@ -106,5 +106,9 @@
 		
 		
 	</bean>
-	<bean id="queryRenderService" class="com.yesmynet.query.http.service.QueryRenderService"></bean>
+	<bean id="queryRenderService" class="com.yesmynet.query.http.service.QueryRenderService">
+		<property name="parameterLayoutService" ref="simpleLayoutService"></property>
+	</bean>
+	<bean id="simpleLayoutService" class="com.yesmynet.query.http.service.impl.SimpleLayoutService"></bean>
+	
 </beans>
