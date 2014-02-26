@@ -33,6 +33,10 @@ public class Parameter extends BaseDto
 	 * 参数验证器配置
 	 */
 	private List<ValidatorRule>validatorRules;
+	/**
+	 * 显示时的布局数据
+	 */
+	private ParameterLayoutDTO parameterLayoutDTO;
 	public QueryDefinition getQueryDefinition()
 	{
 		return queryDefinition;
@@ -55,4 +59,11 @@ public class Parameter extends BaseDto
 	public void setValidatorRules(List<ValidatorRule> validatorRules) {
 		this.validatorRules = validatorRules;
 	}
+	public ParameterLayoutDTO getParameterLayoutDTO() {
+		return parameterLayoutDTO;
+	}
+	public void setParameterLayoutDTO(ParameterLayoutDTO parameterLayoutDTO) {
+		this.parameterLayoutDTO = parameterLayoutDTO;
+	}
+	
 }
