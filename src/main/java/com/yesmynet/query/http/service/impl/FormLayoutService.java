@@ -143,8 +143,9 @@ public class FormLayoutService implements ParameterLayoutService {
 			Integer curColumn=1;//当前列
 			Integer curRowRemainedColumn=0;//当前行剩余列数
 			Map<Integer,Integer> rowRemainedColumnMap=new HashMap<Integer,Integer>();//每行剩余的列数
-			for(Parameter param:parameters)
+			for(int i=0;i<parameters.size();i++)
 			{
+				Parameter param=parameters.get(i);
 				int rowSpan = getSpanNum(param, 1);
 				int columnSpan = getSpanNum(param, 2);
 				if(columnSpan>cloumnNum) columnSpan=cloumnNum;
@@ -174,6 +175,7 @@ public class FormLayoutService implements ParameterLayoutService {
 				{
 					//本行剩余列数太少，放不下这个参数
 					curRowRemainedColumn=0;
+					i--;
 				}
 				saveRowSpans(curRow,rowSpan,columnSpan,rowRemainedColumnMap);
 			}
@@ -268,9 +270,9 @@ public class FormLayoutService implements ParameterLayoutService {
 				lastRow=paramPosition.getRow();
 				re.append("<td");
 				if(paramPosition.getRowSpan()>1)
-					re.append(" rowSpan='").append(paramPosition.getRowSpan()).append("'");
+					re.append(" rowspan='").append(paramPosition.getRowSpan()).append("'");
 				if(paramPosition.getColumnSpan()>1)
-					re.append(" columnSpan='").append(paramPosition.getColumnSpan()).append("'");
+					re.append(" colspan='").append(paramPosition.getColumnSpan()).append("'");
 				re.append(">\n");
 				
 				if(showTitle)
