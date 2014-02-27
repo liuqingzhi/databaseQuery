@@ -16,7 +16,7 @@ public class ParameterLayoutDTO {
 	/**
 	 * 跨几列
 	 */
-	private Integer clomnSpan;
+	private Integer columnSpan;
 	public Integer getSort() {
 		return sort;
 	}
@@ -29,10 +29,11 @@ public class ParameterLayoutDTO {
 	public void setRowSpan(Integer rowSpan) {
 		this.rowSpan = rowSpan;
 	}
-	public Integer getClomnSpan() {
-		return clomnSpan;
+	public Integer getColumnSpan() {
+		return columnSpan;
 	}
-	public void setClomnSpan(Integer clomnSpan) {
-		this.clomnSpan = clomnSpan;
-	} 
+	public void setColumnSpan(Integer columnSpan) {
+		this.columnSpan = columnSpan;
+	}
+	
 }
