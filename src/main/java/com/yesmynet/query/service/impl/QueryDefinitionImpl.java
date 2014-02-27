@@ -4,6 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.util.StringUtils;
+
+import com.yesmynet.query.core.dto.DataSourceConfig;
 import com.yesmynet.query.core.dto.Environment;
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.ParameterHtmlType;
@@ -21,6 +28,10 @@ import com.yesmynet.query.utils.QueryUtils;
  *
  */
 public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
+	/**
+	 * 表示在执行查询时，默认要执行的命令
+	 */
+	private String DEFAULT_COMMAND="defaultCommand";
 	 /**
      * 关于本查询的设置，包括所有的参数
      */
@@ -82,6 +93,26 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		}
     }
     /**
+     * 根据ID得到数据库中的查询定义得到
+     * @author liuqingzhi
+     *
+     */
+    public static class QueryDefinitionGetter implements QueryService
+    {
+
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			QueryResult re =new QueryResult();
+			DataSource systemDataSource = getSystemDataSource(resourceHolder);
+			JdbcTemplate jdbcTemplate=new JdbcTemplate(systemDataSource);
+			jdbcTemplate.queryForObject(sql, rowMapper)
+			
+			return re;
+		}
+    	
+    }
+    /**
      * 保存查询定义
      * @author liuqingzhi
      *
@@ -126,6 +157,10 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		QueryResult re =null;
 		List<Parameter> parameters = queryDefinition.getParameters();
 		String command = QueryUtils.getParameterValue(parameters, ParameterName.Command.getParameter().getParameterInput().getName());
+		if(!StringUtils.hasText(command))
+		{
+			command=DEFAULT_COMMAND;
+		}
 		QueryService commandQuery = commandQueryMap.get(command);
 		if(commandQuery!=null)
 			re=commandQuery.doInQuery(queryDefinition, resourceHolder, environment);
@@ -149,6 +184,29 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
         queryDefinition.setParameters(parameters);
 
         return queryDefinition;
+	}
+	/**
+	 * 得到系统数据库
+	 * @param resourceHolder
+	 * @return
+	 */
+	private static DataSource getSystemDataSource(ResourceHolder resourceHolder)
+	{
+		DataSource re=null;
+		List<DataSourceConfig> dataSourceConfigs = resourceHolder.getDataSourceConfigs();
+		if(CollectionUtils.isNotEmpty(dataSourceConfigs))
+		{
+			for(DataSourceConfig dataSourceConfig:dataSourceConfigs)
+			{
+				if(dataSourceConfig.isSystemConfigDb())
+				{
+					re=dataSourceConfig.getDatasource();
+					break;
+				}
+			}
+		}
+		
+		return re;
 	}
 	public Map<String, QueryService> getCommandQueryMap() {
 		return commandQueryMap;

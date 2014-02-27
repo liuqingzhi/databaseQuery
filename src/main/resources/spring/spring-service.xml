@@ -40,6 +40,7 @@
                     <property name="name" value="derby数据库"></property>
                     <property name="databaseDialect" value="Derby"></property>
                     <property name="datasource" ref="dataSource">
+                    <property name="systemConfigDb" ref="true">
                     </property>
 				</bean>
 			</list>
