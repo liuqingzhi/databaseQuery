@@ -1,5 +1,7 @@
 package com.yesmynet.query.service.impl;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +10,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.StringUtils;
 
 import com.yesmynet.query.core.dto.DataSourceConfig;
@@ -44,10 +47,10 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     {
     	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","",""),
     	
-    	QueryDefinitionId("查询的Id","definitionId","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryDefinitionName("查询的名称","definitionName","",ParameterHtmlType.InputText,"","",""),
-    	QueryDefinitionDescription("查询描述","definitionDesc","",ParameterHtmlType.InputText,"","",""),
-    	QueryDefinitionJavaCode("查询代码","definitionCode","",ParameterHtmlType.TextArea,"","",""),
+    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","",""),
+    	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","",""),
+    	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","",""),
+    	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","",""),
     	
     	QueryParameterTitle("参数标题","parameterTitle","",ParameterHtmlType.InputHidden,"","",""),
     	QueryParameterDescription("参数描述","parameterDescription","",ParameterHtmlType.InputHidden,"","",""),
@@ -106,11 +109,60 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			QueryResult re =new QueryResult();
 			DataSource systemDataSource = getSystemDataSource(resourceHolder);
 			JdbcTemplate jdbcTemplate=new JdbcTemplate(systemDataSource);
-			jdbcTemplate.queryForObject(sql, rowMapper)
+			
+			String sql="select * From m_sys_query where id=?";
+			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getParameter().getParameterInput().getName());
+			QueryDefinition queryForObject = jdbcTemplate.queryForObject(sql, new Object[] {queryId}, QueryDefinitionRowMapper);
+			
+			sql="select t1.* From m_sys_query_parameter t1 where t1.query_id=?";
+			List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{}, ParameterRowMapper);
+			
+			queryForObject.setParameters(parameters);
+			
 			
 			return re;
 		}
-    	
+		private RowMapper<QueryDefinition> QueryDefinitionRowMapper=new RowMapper<QueryDefinition>() {
+
+			@Override
+			public QueryDefinition mapRow(ResultSet rs, int rowNum) throws SQLException {
+				
+				QueryDefinition re=new QueryDefinition();
+		        re.setId(rs.getString("id"));
+		        re.setName(rs.getString("name"));
+		        re.setDescription(rs.getString("description"));
+		        re.setAfterParameterHtml(rs.getString("afterParameterHtml"));
+		        re.setJavaCode(rs.getString("javaCode"));
+		        
+				return re;
+			}
+		};
+		private RowMapper<Parameter> ParameterRowMapper=new RowMapper<Parameter>() {
+
+			@Override
+			public Parameter mapRow(ResultSet rs, int rowNum) throws SQLException {
+				
+				Parameter re=new Parameter();
+				ParameterInput input =new ParameterInput();
+				re.setParameterInput(input);
+		       
+				
+		        re.setId(rs.getString("id"));
+		        input.setId(rs.getString("id"));
+		        input.setTitle(rs.getString("title"));
+		        input.setDescription(rs.getString("description"));
+		        input.setHtmlType(ParameterHtmlType.valueOf(rs.getString("html_Type")));
+		        input.setName(rs.getString("name"));
+		        input.setStyle(rs.getString("style"));
+		        input.setStyleClass(rs.getString("style_class"));
+		        input.setOptionGetterKey(rs.getString("option_getter_Key"));
+		        
+				
+				return re;
+			}
+		};
+				
+			
     }
     /**
      * 保存查询定义
