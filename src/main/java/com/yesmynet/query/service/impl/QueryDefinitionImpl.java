@@ -58,7 +58,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     {
     	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",false),
     	
-    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","","",true),
     	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",true),
     	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",true),

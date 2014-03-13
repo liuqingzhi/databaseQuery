@@ -1,4 +1,4 @@
-
+				<input type="hidden" name="id" value="${(queryDefinition.id)!""}">
 				名称：<input type="text" name="name" value="${(queryDefinition.name)!""}"><br>
 				描述:<textarea rows="3" cols="100" name="description">${(queryDefinition.description)!""}</textarea><br>
 				定义参数：<br>
