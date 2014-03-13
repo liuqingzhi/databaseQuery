@@ -13,10 +13,6 @@ public enum SystemParameterName
 	 */
 	QueryId("SystemQueryId"),
 	/**
-	 * 表示要执行查询的命令，当本参数有值，不管值是什么都表示要执行查询
-	 */
-	QueryExecute("SystemQueryExecute"),
-	/**
      * 表示要使用哪个数据源
      * 在执行查询时，可以从多个数据源中选择一个。
      */
