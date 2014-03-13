@@ -91,82 +91,32 @@
 		</#if>	
 	
 	<#if (!ajaxShow)>
-		<script id="parameterInsertTemplate" type="text/x-jquery-tmpl">
-					<#noparse>
-						<tr>
-		    				<td>
-								<input type="checkbox" name="parametersToDelete" value="-1">
-		    					<input type="hidden" name="parameters[${param_index}].id" value="-1">
-		    				</td>
-		    				<td>
-		    					<input type="text" name="parameters[${param_index}].parameterInput.customName" value="">
-		    				</td>
-							<td>
-								<input type="text" name="parameters[${param_index}].parameterInput.title" value="">
-							</td>
-							<td>
-		    					<input type="text" name="parameters[${param_index}].parameterInput.style" value="">
-		    				</td>
-							<td>
-		    					<input type="text" name="parameters[${param_index}].parameterInput.styleClass" value="">
-		    				</td>	    				
-		    				<td>
-		    					<input type="text" name="parameters[${param_index}].parameterInput.description" value="">
-		    				</td>
-		    				
-		    				<td>
-		    					<select name="parameters[${param_index}].parameterInput.htmlType">
-						</#noparse>
-							        <#list allHtmlTypes as htmlType1>
-							        <option value="${htmlType1}" <#if (param.htmlType)?exists && param.htmlType==htmlType1>selected</#if>>${htmlType1.title}</option>
-							        </#list>
-						<#noparse>
-							    </select>
-		    				</td>
-							<td>
-								
-							</td>
-		    			</tr>
-					</#noparse>
-		</script>
-		<script id="parameterValidatorTemplate" type="text/x-jquery-tmpl">
-			<tr>
-				<td>
-					<#noparse>
-					<select name="parameters[${param_index}].parameterValidatorRecordDtos[${validator_index}].validatorType">
-					</#noparse>
-						
-					</select>
-				</td>
-				<td>
-					
-				</td>
-			</tr>
-		</script>
-		
-		
 		<script type="text/javascript">
 			$(document).ready(function() {
 			
-				//参数表格的增加行、删除行的操作
+				//参数的增加、删除的操作
 				(function(){
-					var rowCount = $('#parameterListTable tr').length;
-					
 					$("#parameterAddButton").click(function()
 					{
-						var newRowIndex=rowCount-2;
-						
-						var parameterRow=$( "#parameterInsertTemplate" ).tmpl({param_index:newRowIndex});
-						
-						$('#parameterListTable tr:last').before(parameterRow);
-						rowCount=rowCount+1;
+						//显示参数的dialog
+						var tag = $("<div></div>");
+						var url=$(location).attr('pathname');
+						$.get(url,
+							{'SystemQueryId':'queryDefinition','command':'queryParameterGetter'},
+							function(json){
+								if(json.success && json.success===true)
+								{
+									tag.html(json.data.html).dialog({modal: true}).dialog('open');
+								}
+								else
+								{
+									alert(json.msg);
+								}	
+							},
+							'json'
+						);
 					});
 					
-					$("#parameterDeleteButton").click(function()
-					{
-						$('#parameterListTable input[type=checkbox]:checked').parents("tr").remove();
-						
-					});
 				})();
 				
 				//保存查询的按钮

@@ -46,6 +46,10 @@ import com.yesmynet.query.utils.QueryUtils;
  */
 public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 	/**
+	 * 用于生成gson字符串的对象
+	 */
+	private Gson gson = new GsonBuilder().create();//.serializeNulls()
+	/**
 	 * 表示在执行查询时，默认要执行的命令
 	 */
 	private String DEFAULT_COMMAND="queryDefinitionGetter";
@@ -66,6 +70,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",true),
     	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",true),
     	
+    	QueryParameterId("参数的Id","parameterId","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterTitle("参数标题","parameterTitle","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterDescription("参数描述","parameterDescription","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterHtmlType("参数类型","parameterHtmlType","",ParameterHtmlType.InputHidden,"","","",true),
@@ -112,6 +117,33 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		}
     }
     /**
+     * 把参数的数据库查询映射为一个对象
+     */
+    private RowMapper<Parameter> parameterRowMapper=new RowMapper<Parameter>() {
+
+		@Override
+		public Parameter mapRow(ResultSet rs, int rowNum) throws SQLException {
+			
+			Parameter re=new Parameter();
+			ParameterInput input =new ParameterInput();
+			re.setParameterInput(input);
+	       
+			
+	        re.setId(rs.getString("id"));
+	        input.setId(rs.getString("id"));
+	        input.setTitle(rs.getString("title"));
+	        input.setDescription(rs.getString("description"));
+	        input.setHtmlType(ParameterHtmlType.valueOf(rs.getString("html_Type")));
+	        input.setName(rs.getString("name"));
+	        input.setStyle(rs.getString("style"));
+	        input.setStyleClass(rs.getString("style_class"));
+	        input.setOptionGetterKey(rs.getString("option_getter_Key"));
+	        
+			
+			return re;
+		}
+	};
+    /**
      * 构造函数
      */
     public QueryDefinitionImpl() {
@@ -121,6 +153,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		commandQueryMap.put("queryDefinitionGetter", new QueryDefinitionGetter());
 		commandQueryMap.put("queryDefinitionSave", new QueryDefinitionSave());
 		commandQueryMap.put("queryParameterSave", new QueryParameterSave());
+		commandQueryMap.put("queryParameterGetter", new QueryParameterGetter());
+		
 	}
 	/**
      * 得到操作系统数据库的jdbcTemplate
@@ -170,30 +204,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			});
 			
 			sql="select t1.* From m_sys_query_parameter t1 where t1.query_id=?";
-			List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{queryId}, new RowMapper<Parameter>() {
-
-				@Override
-				public Parameter mapRow(ResultSet rs, int rowNum) throws SQLException {
-					
-					Parameter re=new Parameter();
-					ParameterInput input =new ParameterInput();
-					re.setParameterInput(input);
-			       
-					
-			        re.setId(rs.getString("id"));
-			        input.setId(rs.getString("id"));
-			        input.setTitle(rs.getString("title"));
-			        input.setDescription(rs.getString("description"));
-			        input.setHtmlType(ParameterHtmlType.valueOf(rs.getString("html_Type")));
-			        input.setName(rs.getString("name"));
-			        input.setStyle(rs.getString("style"));
-			        input.setStyleClass(rs.getString("style_class"));
-			        input.setOptionGetterKey(rs.getString("option_getter_Key"));
-			        
-					
-					return re;
-				}
-			});
+			List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{queryId}, parameterRowMapper);
 			
 			queryDefinitionInDB.setParameters(parameters);
 		}
@@ -212,6 +223,37 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		toViewDatas.put("ajaxShow", ajaxShow);
 		
 		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editQuery.ftl", toViewDatas);
+		return content;
+	}
+    /**
+     * 根据ID得到一个参数
+     * @param id
+     * @param resourceHolder
+     * @return
+     * @throws ServiceException
+     */
+    private Parameter getParameterById(String id,ResourceHolder resourceHolder) throws ServiceException
+    {
+    	Parameter re=null;
+    	if(StringUtils.hasText(id))
+    	{
+    		JdbcTemplate jdbcTemplate=getSystemDBTemplate(resourceHolder);
+    		String sql="select t1.* From m_sys_query_parameter t1 where t1.id=?";
+			re = jdbcTemplate.queryForObject(sql, new Object[]{id}, parameterRowMapper);
+    	}
+    	return re;
+    }
+    /**
+     * 显示一个参数
+     * @param paramter
+     * @return
+     */
+    private String showParameter(Parameter paramter) {
+		Map<String,Object> toViewDatas=new HashMap<String,Object>();
+		toViewDatas.put("paramter", paramter);
+		toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
+		
+		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editParameter.ftl", toViewDatas);
 		return content;
 	}
     /**
@@ -256,7 +298,6 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
-			Gson gson = new GsonBuilder().create();//.serializeNulls()
 			JdbcTemplate jdbcTemplate=null;
 			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
 			Map<String,Object> datas=new HashMap<String,Object>();
@@ -291,16 +332,6 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				}
 				else
 				{
-					/*sql="insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)";
-					jdbcTemplate.update(sql, new PreparedStatementSetter(){
-						@Override
-						public void setValues(PreparedStatement ps) throws SQLException {
-							ps.setString(1, queryByRequest.getName());
-							ps.setString(2, queryByRequest.getDescription());
-							ps.setString(3, queryByRequest.getAfterParameterHtml());
-							ps.setString(4, queryByRequest.getJavaCode());
-						}});
-					*/
 					KeyHolder keyHolder = new GeneratedKeyHolder();
 					jdbcTemplate.update(
 					    new PreparedStatementCreator() {
@@ -354,6 +385,42 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			WebDataBinder webDataBinder =new WebDataBinder(re);
 			MutablePropertyValues propertyValues=new MutablePropertyValues(parameterMap);
 			webDataBinder.bind(propertyValues);
+			
+			return re;
+		}
+    }
+    /**
+     * 得到一个参数并显示之
+     * @author liuqingzhi
+     *
+     */
+    public class QueryParameterGetter implements QueryService
+    {
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			QueryResult re =new QueryResult();
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> data=new HashMap<String,Object>();
+			infoDTO.setData(data);
+			
+			infoDTO.setSuccess(true);
+			infoDTO.setMsg("得到参数成功");
+			try
+			{
+				String parameterId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryParameterId.getParameter().getParameterInput().getName());
+				Parameter parameter = getParameterById(parameterId,resourceHolder);
+				String showParameter = showParameter(parameter);
+				data.put("html", showParameter);
+				
+			}
+			catch(Exception e)
+			{
+				infoDTO.setSuccess(true);
+				infoDTO.setMsg("得到查询参数失败，"+e.getMessage());
+			}
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
 			
 			return re;
 		}
