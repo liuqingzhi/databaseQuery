@@ -43,6 +43,12 @@ public class FreemarkerUtils {
 		}
 		return re;
 	}
+	/**
+	 * 渲染模板，模板是放在classpath中的。
+	 * @param templateClassPath 模板在classpath中的路径，如：/com/yesmynet/query/utils/test.ftl、/test.ftl等。
+	 * @param datas 模板要显示的数据
+	 * @return
+	 */
 	public static String renderTemplateInClassPath(String templateClassPath,Object datas)
 	{
 		String re=null;
@@ -57,6 +63,14 @@ public class FreemarkerUtils {
 		}
 		return re;
 	}
+	/**
+	 * 渲染模板，并得到最后生成的字符串
+	 * @param template
+	 * @param datas
+	 * @return
+	 * @throws TemplateException
+	 * @throws IOException
+	 */
 	private static String renderTemplate(Template template,Object datas) throws TemplateException, IOException
 	{
 		String re=null;
