@@ -45,26 +45,26 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     private Map<String,QueryService> commandQueryMap;
     private enum ParameterName
     {
-    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","",""),
+    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",true),
     	
-    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","",""),
-    	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","",""),
-    	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","",""),
+    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","","",false),
+    	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",false),
+    	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",false),
     	
-    	QueryParameterTitle("参数标题","parameterTitle","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterDescription("参数描述","parameterDescription","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterHtmlType("参数类型","parameterHtmlType","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterName("参数名称","parameterName","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterStyle("参数css","parameterStyle","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterStyleClass("参数css class","parameterStyleClass","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterEraseValue("不回显参数值","parameterEraseValue","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterOptionGetterKey("选项获取器","parameterOptionGetterKey","",ParameterHtmlType.InputHidden,"","",""),
-    	QueryParameterElementHtml("直接html","parameterElementHtml","",ParameterHtmlType.InputHidden,"","",""),
+    	QueryParameterTitle("参数标题","parameterTitle","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterDescription("参数描述","parameterDescription","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterHtmlType("参数类型","parameterHtmlType","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterName("参数名称","parameterName","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterStyle("参数css","parameterStyle","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterStyleClass("参数css class","parameterStyleClass","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterEraseValue("不回显参数值","parameterEraseValue","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterOptionGetterKey("选项获取器","parameterOptionGetterKey","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterElementHtml("直接html","parameterElementHtml","",ParameterHtmlType.InputHidden,"","","",false),
     	
     	
     	
-    	ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'"),
+    	ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",false),
     	;
     	private Parameter parameter;
     	/**
@@ -77,7 +77,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	 * @param styleCss 样式的class
     	 * @param elementHtml 直接在html中输出的内容
     	 */
-    	private ParameterName(String title,String name,String description,ParameterHtmlType htmlType,String style,String styleClass,String elementHtml)
+    	private ParameterName(String title,String name,String description,ParameterHtmlType htmlType,String style,String styleClass,String elementHtml,Boolean notShow)
     	{
     		parameter=new Parameter();
     		ParameterInput input=new ParameterInput();
@@ -89,6 +89,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     		input.setStyle(style);
     		input.setStyleClass(styleClass);
     		input.setElementHtml(elementHtml);
+    		input.setNotShow(notShow);
+    		
     		parameter.setParameterInput(input);
     	}
 		public Parameter getParameter() {

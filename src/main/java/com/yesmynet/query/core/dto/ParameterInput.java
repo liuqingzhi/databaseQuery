@@ -71,6 +71,13 @@ public class ParameterInput extends BaseDto
      * html如下：<input onlick='alter("aaa")'>。
      */
     private String elementHtml;
+    /**
+     * 表示不显示,false表示显示，true表示不显示。
+     * 有时定义一个参数只是为了得到参数的值却不希望在界面上显示；例如，我定义一个参数，在执行查询后，查询结果中会显示一个输入框，
+     * 由用户输入，我不希望在查询的参数列表中显示参数，即使使用hidden也不符合我的意愿，因为使用hidden，如果我再显示一个输入框，
+     * 那会导致同名的输入框有两个，提交后，服务端得到两个值。
+     */
+    private Boolean notShow;
     
     public String getTitle()
     {
@@ -153,6 +160,12 @@ public class ParameterInput extends BaseDto
 	}
 	public void setElementHtml(String elementHtml) {
 		this.elementHtml = elementHtml;
+	}
+	public Boolean getNotShow() {
+		return notShow;
+	}
+	public void setNotShow(Boolean notShow) {
+		this.notShow = notShow;
 	}
 	/**
      * 转成html代码

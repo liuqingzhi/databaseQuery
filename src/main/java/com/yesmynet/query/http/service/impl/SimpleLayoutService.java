@@ -20,10 +20,11 @@ public class SimpleLayoutService implements ParameterLayoutService {
         {
             for(Parameter define:parameters)
             {
-                String oneParameterHtml=getParameterHtml(define);
-                
-                re.append(oneParameterHtml);
-                
+            	if(define.getParameterInput().getNotShow()==null || !define.getParameterInput().getNotShow())
+            	{
+            		String oneParameterHtml=getParameterHtml(define);
+            		re.append(oneParameterHtml);
+            	}
             }
         }
 		return re.toString();
