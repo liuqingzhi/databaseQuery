@@ -3,6 +3,7 @@ package com.yesmynet.query.service.impl;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.ResourceHolder;
+import com.yesmynet.query.utils.FreemarkerUtils;
 import com.yesmynet.query.utils.QueryUtils;
 
 /**
@@ -45,26 +47,26 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     private Map<String,QueryService> commandQueryMap;
     private enum ParameterName
     {
-    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",true),
+    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",false),
     	
-    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","","",false),
-    	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",false),
-    	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",false),
+    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","","",true),
+    	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",true),
+    	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",true),
     	
-    	QueryParameterTitle("参数标题","parameterTitle","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterDescription("参数描述","parameterDescription","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterHtmlType("参数类型","parameterHtmlType","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterName("参数名称","parameterName","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterStyle("参数css","parameterStyle","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterStyleClass("参数css class","parameterStyleClass","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterEraseValue("不回显参数值","parameterEraseValue","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterOptionGetterKey("选项获取器","parameterOptionGetterKey","",ParameterHtmlType.InputHidden,"","","",false),
-    	QueryParameterElementHtml("直接html","parameterElementHtml","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterTitle("参数标题","parameterTitle","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterDescription("参数描述","parameterDescription","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterHtmlType("参数类型","parameterHtmlType","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterName("参数名称","parameterName","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterStyle("参数css","parameterStyle","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterStyleClass("参数css class","parameterStyleClass","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterEraseValue("不回显参数值","parameterEraseValue","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterOptionGetterKey("选项获取器","parameterOptionGetterKey","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterElementHtml("直接html","parameterElementHtml","",ParameterHtmlType.InputHidden,"","","",true),
     	
     	
     	
-    	ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",false),
+    	//ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",true),
     	;
     	private Parameter parameter;
     	/**
@@ -110,17 +112,32 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
 			DataSource systemDataSource = getSystemDataSource(resourceHolder);
-			JdbcTemplate jdbcTemplate=new JdbcTemplate(systemDataSource);
-			
-			String sql="select * From m_sys_query where id=?";
+			if(systemDataSource==null)
+			{
+				//没有得到系统数据库，可能是当前用户没权限。
+				re.setContent("您没有权限编辑查询");
+				return re;
+			}
 			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getParameter().getParameterInput().getName());
-			QueryDefinition queryForObject = jdbcTemplate.queryForObject(sql, new Object[] {queryId}, QueryDefinitionRowMapper);
+			QueryDefinition queryDefinitionInDB=null;
+			if(queryId!=null)
+			{
+				JdbcTemplate jdbcTemplate=new JdbcTemplate(systemDataSource);
+				
+				String sql="select * From m_sys_query where id=?";
+				queryDefinitionInDB = jdbcTemplate.queryForObject(sql, new Object[] {queryId}, QueryDefinitionRowMapper);
+				
+				sql="select t1.* From m_sys_query_parameter t1 where t1.query_id=?";
+				List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{}, ParameterRowMapper);
+				
+				queryDefinitionInDB.setParameters(parameters);
+			}
 			
-			sql="select t1.* From m_sys_query_parameter t1 where t1.query_id=?";
-			List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{}, ParameterRowMapper);
+			Map<String,Object> toViewDatas=new HashMap<String,Object>();
+			toViewDatas.put("queryDefinition", queryDefinitionInDB);
+			String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editQuery.ftl", toViewDatas);
 			
-			queryForObject.setParameters(parameters);
-			
+			re.setContent(content);
 			
 			return re;
 		}

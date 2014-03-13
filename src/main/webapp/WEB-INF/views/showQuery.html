@@ -15,13 +15,11 @@
 			<form id="queryForm" action="" method="POST">
 				<input type="hidden" name="SystemQueryExecute" value="">
 				${queryHtml}
-			</form>
-		</div>
-		<div class="divBlock">
-			
-			${(queryResult.content)!""}
-			<pre>${queryExecuteExceptionString}</pre>
 				
+				${(queryResult.content)!""}
+				<pre>${queryExecuteExceptionString}</pre>
+				
+			</form>
 		</div>
 	</body>
 </html>
