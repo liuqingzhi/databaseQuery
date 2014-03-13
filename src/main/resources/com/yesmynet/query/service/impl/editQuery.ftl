@@ -83,7 +83,7 @@
 				</table>
 				
 				
-				java代码:<br><textarea rows="60" cols="100" name="javaCode">${(queryDefinition.javaCode)!""}</textarea><br>
+				java代码:<br><textarea rows="30" cols="100" name="javaCode">${(queryDefinition.javaCode)!""}</textarea><br>
 				
 				<input type="button" value="保存查询定义" id="saveQueryDefinition">
 		<#if (!ajaxShow)>	
