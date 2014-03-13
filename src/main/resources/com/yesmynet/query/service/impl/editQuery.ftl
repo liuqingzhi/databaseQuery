@@ -82,7 +82,7 @@
 				
 				java代码:<br><textarea rows="60" cols="100" name="javaCode">${(queryDefinition.javaCode)!""}</textarea><br>
 				
-				<input type="submit" value="保存" name="saveQuery">
+				<input type="submit" value="保存查询定义" id="saveQueryDefinition">
 	
 	<script id="parameterInsertTemplate" type="text/x-jquery-tmpl">
 				<#noparse>
@@ -140,23 +140,38 @@
 	
 	<script type="text/javascript">
 		$(document).ready(function() {
-			var rowCount = $('#parameterListTable tr').length;
+		
+			//参数表格的增加行、删除行的操作
+			(function(){
+				var rowCount = $('#parameterListTable tr').length;
+				
+				$("#parameterAddButton").click(function()
+				{
+					var newRowIndex=rowCount-2;
+					
+					var parameterRow=$( "#parameterInsertTemplate" ).tmpl({param_index:newRowIndex});
+					
+					$('#parameterListTable tr:last').before(parameterRow);
+					rowCount=rowCount+1;
+				});
+				
+				$("#parameterDeleteButton").click(function()
+				{
+					$('#parameterListTable input[type=checkbox]:checked').parents("tr").remove();
+					
+				});
+			})();
 			
-			$("#parameterAddButton").click(function()
-			{
-				var newRowIndex=rowCount-2;
-				
-				var parameterRow=$( "#parameterInsertTemplate" ).tmpl({param_index:newRowIndex});
-				
-				$('#parameterListTable tr:last').before(parameterRow);
-				rowCount=rowCount+1;
-			});
+			//保存查询的按钮
+			(function(){
+				$("#saveQueryDefinition").click(function()
+				{
+					$("#queryForm input[name='command']").val('queryDefinitionSave');
+					$("#queryForm").submit();		
+					
+				});
 			
-			$("#parameterDeleteButton").click(function()
-			{
-				$('#parameterListTable input[type=checkbox]:checked').parents("tr").remove();
-				
-			});
+			})();
 			
 		});
 

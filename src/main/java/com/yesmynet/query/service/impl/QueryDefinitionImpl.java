@@ -1,5 +1,7 @@
 package com.yesmynet.query.service.impl;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -10,9 +12,15 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.WebDataBinder;
 
 import com.yesmynet.query.core.dto.DataSourceConfig;
 import com.yesmynet.query.core.dto.Environment;
@@ -21,6 +29,7 @@ import com.yesmynet.query.core.dto.ParameterHtmlType;
 import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.exception.ServiceException;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.ResourceHolder;
@@ -100,6 +109,22 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		}
     }
     /**
+     * 得到操作系统数据库的jdbcTemplate
+     * @param resourceHolder
+     * @return
+     */
+    private static JdbcTemplate getSystemDBTemplate(ResourceHolder resourceHolder)
+    {
+    	DataSource systemDataSource = getSystemDataSource(resourceHolder);
+		if(systemDataSource==null)
+		{
+			//没有得到系统数据库，可能是当前用户没权限。
+			throw new ServiceException("您没有权限编辑查询");
+		}
+		JdbcTemplate jdbcTemplate=new JdbcTemplate(systemDataSource);
+		return jdbcTemplate;
+    }
+    /**
      * 根据ID得到数据库中的查询定义得到
      * @author liuqingzhi
      *
@@ -111,19 +136,18 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
-			DataSource systemDataSource = getSystemDataSource(resourceHolder);
-			if(systemDataSource==null)
-			{
-				//没有得到系统数据库，可能是当前用户没权限。
-				re.setContent("您没有权限编辑查询");
+			JdbcTemplate jdbcTemplate=null;
+			try {
+				jdbcTemplate=getSystemDBTemplate(resourceHolder);
+			} catch (ServiceException e) {
+				re.setContent(e.getMessage());
 				return re;
 			}
+			
 			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getParameter().getParameterInput().getName());
 			QueryDefinition queryDefinitionInDB=null;
 			if(queryId!=null)
 			{
-				JdbcTemplate jdbcTemplate=new JdbcTemplate(systemDataSource);
-				
 				String sql="select * From m_sys_query where id=?";
 				queryDefinitionInDB = jdbcTemplate.queryForObject(sql, new Object[] {queryId}, QueryDefinitionRowMapper);
 				
@@ -152,8 +176,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		        re.setId(rs.getString("id"));
 		        re.setName(rs.getString("name"));
 		        re.setDescription(rs.getString("description"));
-		        re.setAfterParameterHtml(rs.getString("afterParameterHtml"));
-		        re.setJavaCode(rs.getString("javaCode"));
+		        re.setAfterParameterHtml(rs.getString("after_Parameter_Html"));
+		        re.setJavaCode(rs.getString("java_code"));
 		        
 				return re;
 			}
@@ -196,7 +220,85 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
-			re.setContent("command=保存查询定义");
+
+			JdbcTemplate jdbcTemplate=null;
+			try {
+				jdbcTemplate=getSystemDBTemplate(resourceHolder);
+			} catch (ServiceException e) {
+				re.setContent(e.getMessage());
+				return re;
+			}
+			
+			final QueryDefinition queryByRequest = bindDatas(queryDefinition);
+			
+			String id = queryByRequest.getId();
+			String sql="";
+			
+			if(StringUtils.hasText(id))
+			{
+				final int queryId=Integer.parseInt(id);
+						
+				sql="update m_sys_query set name=?,description=?,after_Parameter_Html=?,java_code=? where id=?";
+				jdbcTemplate.update(sql, new PreparedStatementSetter(){
+					@Override
+					public void setValues(PreparedStatement ps) throws SQLException {
+						ps.setString(1, queryByRequest.getName());
+						ps.setString(2, queryByRequest.getDescription());
+						ps.setString(3, queryByRequest.getAfterParameterHtml());
+						ps.setString(4, queryByRequest.getJavaCode());
+						ps.setInt(5, queryId);
+					}});
+			}
+			else
+			{
+				/*sql="insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)";
+				jdbcTemplate.update(sql, new PreparedStatementSetter(){
+					@Override
+					public void setValues(PreparedStatement ps) throws SQLException {
+						ps.setString(1, queryByRequest.getName());
+						ps.setString(2, queryByRequest.getDescription());
+						ps.setString(3, queryByRequest.getAfterParameterHtml());
+						ps.setString(4, queryByRequest.getJavaCode());
+					}});
+				*/
+				KeyHolder keyHolder = new GeneratedKeyHolder();
+				jdbcTemplate.update(
+				    new PreparedStatementCreator() {
+				        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+				            PreparedStatement ps =
+				                connection.prepareStatement("insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错：SQL state [X0X0F]; error code [30000]; Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.; nested exception is java.sql.SQLException: Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.*/
+
+				            ps.setString(1, queryByRequest.getName());
+							ps.setString(2, queryByRequest.getDescription());
+							ps.setString(3, queryByRequest.getAfterParameterHtml());
+							ps.setString(4, queryByRequest.getJavaCode());
+
+				            return ps;
+				        }
+				    },
+				    keyHolder);
+				id = keyHolder.getKey()+"";
+				
+			}
+			
+			
+			return re;
+		}
+		/**
+		 * 把http请求的参数绑定到一个QueryDefinition对象上
+		 * @param queryDefinition
+		 * @return
+		 */
+		private QueryDefinition bindDatas(QueryDefinition queryDefinition)
+		{
+			QueryDefinition re =new QueryDefinition();
+			List<Parameter> parameters = queryDefinition.getParameters();
+			final Map<String,Object> parameterMap=new HashMap<String,Object>();
+			for (Parameter i : parameters) parameterMap.put(i.getParameterInput().getName(),i.getParameterInput().getValue());
+			
+			WebDataBinder webDataBinder =new WebDataBinder(re);
+			MutablePropertyValues propertyValues=new MutablePropertyValues(parameterMap);
+			webDataBinder.bind(propertyValues);
 			
 			return re;
 		}
@@ -212,6 +314,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
+			
 			re.setContent("command=保存一个参数");
 			
 			return re;

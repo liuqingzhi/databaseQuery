@@ -229,19 +229,18 @@ public class ParameterInput extends BaseDto
         if(!ArrayUtils.isEmpty(this.getValues()))
             value2=this.getValues()[0];
         
-        if(!StringUtils.hasText(value2) || (getEraseValue()!=null && getEraseValue() ))
+        if((getEraseValue()!=null && getEraseValue() ))
         {
-            value2="";
+            value2=null;
         }
-        else
+        /*
+        if(!ParameterHtmlType.TextArea.equals(getHtmlType()) && StringUtils.hasText(value2))
         {
-            if(!ParameterHtmlType.TextArea.equals(getHtmlType()))
-            {
-                value2=value2.replaceAll("\n", "&#10;");//这个会导致一个换行变成二个换行，还不清楚是什么原因
-                value2=value2.replaceAll("\"", "&#034;");
-                value2=value2.replaceAll("'", "&#039;");
-            }
+        	value2=value2.replaceAll("\n", "&#10;");//这个会导致一个换行变成二个换行，还不清楚是什么原因
+            value2=value2.replaceAll("\"", "&#034;");
+            value2=value2.replaceAll("'", "&#039;");
         }
+    	*/
         return value2;
     }
     /**
