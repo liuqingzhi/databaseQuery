@@ -45,7 +45,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 	/**
 	 * 表示在执行查询时，默认要执行的命令
 	 */
-	private String DEFAULT_COMMAND="defaultCommand";
+	private String DEFAULT_COMMAND="queryDefinitionGetter";
 	 /**
      * 关于本查询的设置，包括所有的参数
      */
@@ -109,11 +109,22 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		}
     }
     /**
+     * 构造函数
+     */
+    public QueryDefinitionImpl() {
+		super();
+		//初始化配置
+		commandQueryMap=new HashMap<String,QueryService>();
+		commandQueryMap.put("queryDefinitionGetter", new QueryDefinitionGetter());
+		commandQueryMap.put("queryDefinitionSave", new QueryDefinitionSave());
+		commandQueryMap.put("queryParameterSave", new QueryParameterSave());
+	}
+	/**
      * 得到操作系统数据库的jdbcTemplate
      * @param resourceHolder
      * @return
      */
-    private static JdbcTemplate getSystemDBTemplate(ResourceHolder resourceHolder)
+    private JdbcTemplate getSystemDBTemplate(ResourceHolder resourceHolder) throws ServiceException
     {
     	DataSource systemDataSource = getSystemDataSource(resourceHolder);
 		if(systemDataSource==null)
@@ -125,88 +136,109 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		return jdbcTemplate;
     }
     /**
+     * 从数据库根据ID得到查询定义
+     * @param queryId
+     * @param resourceHolder
+     * @return
+     * @throws ServiceException
+     */
+    private QueryDefinition getQueryDefinitionById(String queryId,ResourceHolder resourceHolder) throws ServiceException
+    {
+    	JdbcTemplate jdbcTemplate=getSystemDBTemplate(resourceHolder);
+    	
+    	QueryDefinition queryDefinitionInDB=null;
+		if(queryId!=null)
+		{
+			String sql="select * From m_sys_query where id=?";
+			queryDefinitionInDB = jdbcTemplate.queryForObject(sql, new Object[] {queryId}, new RowMapper<QueryDefinition>() {
+
+				@Override
+				public QueryDefinition mapRow(ResultSet rs, int rowNum) throws SQLException {
+					
+					QueryDefinition re=new QueryDefinition();
+			        re.setId(rs.getString("id"));
+			        re.setName(rs.getString("name"));
+			        re.setDescription(rs.getString("description"));
+			        re.setAfterParameterHtml(rs.getString("after_Parameter_Html"));
+			        re.setJavaCode(rs.getString("java_code"));
+			        
+					return re;
+				}
+			});
+			
+			sql="select t1.* From m_sys_query_parameter t1 where t1.query_id=?";
+			List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{queryId}, new RowMapper<Parameter>() {
+
+				@Override
+				public Parameter mapRow(ResultSet rs, int rowNum) throws SQLException {
+					
+					Parameter re=new Parameter();
+					ParameterInput input =new ParameterInput();
+					re.setParameterInput(input);
+			       
+					
+			        re.setId(rs.getString("id"));
+			        input.setId(rs.getString("id"));
+			        input.setTitle(rs.getString("title"));
+			        input.setDescription(rs.getString("description"));
+			        input.setHtmlType(ParameterHtmlType.valueOf(rs.getString("html_Type")));
+			        input.setName(rs.getString("name"));
+			        input.setStyle(rs.getString("style"));
+			        input.setStyleClass(rs.getString("style_class"));
+			        input.setOptionGetterKey(rs.getString("option_getter_Key"));
+			        
+					
+					return re;
+				}
+			});
+			
+			queryDefinitionInDB.setParameters(parameters);
+		}
+		
+    	return queryDefinitionInDB;
+    }
+    /**
+     * 显示查询定义
+     * @param queryDefinitionInDB
+     * @return
+     */
+    private String showQueryDefinition(QueryDefinition queryDefinitionInDB) {
+		Map<String,Object> toViewDatas=new HashMap<String,Object>();
+		toViewDatas.put("queryDefinition", queryDefinitionInDB);
+		toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
+		
+		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editQuery.ftl", toViewDatas);
+		return content;
+	}
+    /**
      * 根据ID得到数据库中的查询定义得到
      * @author liuqingzhi
      *
      */
-    public static class QueryDefinitionGetter implements QueryService
+    public class QueryDefinitionGetter implements QueryService
     {
 
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
-			JdbcTemplate jdbcTemplate=null;
+			
+			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getParameter().getParameterInput().getName());
+			QueryDefinition queryDefinitionInDB=null;
+		
 			try {
-				jdbcTemplate=getSystemDBTemplate(resourceHolder);
+				if(queryId!=null)
+				{
+					queryDefinitionInDB=getQueryDefinitionById(queryId,resourceHolder);
+				}	
 			} catch (ServiceException e) {
 				re.setContent(e.getMessage());
 				return re;
 			}
-			
-			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getParameter().getParameterInput().getName());
-			QueryDefinition queryDefinitionInDB=null;
-			if(queryId!=null)
-			{
-				String sql="select * From m_sys_query where id=?";
-				queryDefinitionInDB = jdbcTemplate.queryForObject(sql, new Object[] {queryId}, QueryDefinitionRowMapper);
-				
-				sql="select t1.* From m_sys_query_parameter t1 where t1.query_id=?";
-				List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{}, ParameterRowMapper);
-				
-				queryDefinitionInDB.setParameters(parameters);
-			}
-			
-			Map<String,Object> toViewDatas=new HashMap<String,Object>();
-			toViewDatas.put("queryDefinition", queryDefinitionInDB);
-			toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
-			
-			String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editQuery.ftl", toViewDatas);
-			
+			String content = showQueryDefinition(queryDefinitionInDB);
 			re.setContent(content);
-			
 			return re;
 		}
-		private RowMapper<QueryDefinition> QueryDefinitionRowMapper=new RowMapper<QueryDefinition>() {
-
-			@Override
-			public QueryDefinition mapRow(ResultSet rs, int rowNum) throws SQLException {
-				
-				QueryDefinition re=new QueryDefinition();
-		        re.setId(rs.getString("id"));
-		        re.setName(rs.getString("name"));
-		        re.setDescription(rs.getString("description"));
-		        re.setAfterParameterHtml(rs.getString("after_Parameter_Html"));
-		        re.setJavaCode(rs.getString("java_code"));
-		        
-				return re;
-			}
-		};
-		private RowMapper<Parameter> ParameterRowMapper=new RowMapper<Parameter>() {
-
-			@Override
-			public Parameter mapRow(ResultSet rs, int rowNum) throws SQLException {
-				
-				Parameter re=new Parameter();
-				ParameterInput input =new ParameterInput();
-				re.setParameterInput(input);
-		       
-				
-		        re.setId(rs.getString("id"));
-		        input.setId(rs.getString("id"));
-		        input.setTitle(rs.getString("title"));
-		        input.setDescription(rs.getString("description"));
-		        input.setHtmlType(ParameterHtmlType.valueOf(rs.getString("html_Type")));
-		        input.setName(rs.getString("name"));
-		        input.setStyle(rs.getString("style"));
-		        input.setStyleClass(rs.getString("style_class"));
-		        input.setOptionGetterKey(rs.getString("option_getter_Key"));
-		        
-				
-				return re;
-			}
-		};
-				
 			
     }
     /**
@@ -214,7 +246,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @author liuqingzhi
      *
      */
-    public static class QueryDefinitionSave implements QueryService
+    public class QueryDefinitionSave implements QueryService
     {
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
@@ -278,9 +310,10 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				    },
 				    keyHolder);
 				id = keyHolder.getKey()+"";
-				
 			}
-			
+			QueryDefinition queryDefinitionById = getQueryDefinitionById(id,resourceHolder);
+			String content = showQueryDefinition(queryDefinitionById);
+			re.setContent(content);
 			
 			return re;
 		}
@@ -308,7 +341,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @author liuqingzhi
      *
      */
-    public static class QueryParameterSave implements QueryService
+    public class QueryParameterSave implements QueryService
     {
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
@@ -383,11 +416,5 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		}
 		
 		return re;
-	}
-	public Map<String, QueryService> getCommandQueryMap() {
-		return commandQueryMap;
-	}
-	public void setCommandQueryMap(Map<String, QueryService> commandQueryMap) {
-		this.commandQueryMap = commandQueryMap;
 	}
 }

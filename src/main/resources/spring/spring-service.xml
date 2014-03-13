@@ -78,22 +78,6 @@
 				</entry>
 				<entry key="queryDefinition">
 					<bean class="com.yesmynet.query.service.impl.QueryDefinitionImpl">
-						<property name="commandQueryMap">
-							<map>
-								<entry key="defaultCommand">
-									<bean class="com.yesmynet.query.service.impl.QueryDefinitionImpl$QueryDefinitionGetter">
-									</bean>
-								</entry>
-								<entry key="queryDefinitionSave">
-									<bean class="com.yesmynet.query.service.impl.QueryDefinitionImpl$QueryDefinitionSave">
-									</bean>
-								</entry>
-								<entry key="queryParameterSave">
-									<bean class="com.yesmynet.query.service.impl.QueryDefinitionImpl$QueryParameterSave">
-									</bean>
-								</entry>
-							</map>
-						</property>
 					</bean>
 				</entry>
 			</map>
