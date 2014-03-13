@@ -13,12 +13,12 @@ public class FreemarkerUtilsTest extends TestCase {
 	}
 
 	public void testRenderResourceTemplate() {
-		String template="file:/d:/test/test.ftl";
+		String template="/com/yesmynet/query/utils/test.ftl";
 		Map<String,Object> root=new HashMap<String,Object>();
 		root.put("curDate", new Date());
 		root.put("person", "刘庆志的测试");
 		
-		String renderTemplateByPath = FreemarkerUtils.renderTemplateByPath(template, root);
+		String renderTemplateByPath = FreemarkerUtils.renderTemplateInClassPath(template, root);
 		System.out.printf("freemarker测试的结果：模板=%s，结果=%s",template,renderTemplateByPath);
 		
 		

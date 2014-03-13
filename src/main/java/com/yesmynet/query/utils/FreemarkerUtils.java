@@ -37,35 +37,35 @@ public class FreemarkerUtils {
 		
 		try {
 			Template t = new Template("name", new StringReader(templateContent),new Configuration());
-			StringWriter out=new StringWriter();
-			t.process(datas, out);
-			out.flush();
-			re=out.toString();
+			re=renderTemplate(t,datas);
 		} catch (Exception e) {
 			throw new ServiceException("渲染模板出错了",e);
 		}
 		return re;
 	}
-	public static String renderTemplateByPath(String templateLoaderPath,Object datas)
+	public static String renderTemplateInClassPath(String templateClassPath,Object datas)
 	{
 		String re=null;
 		try {
-			ResourceLoader resourceLoader=new DefaultResourceLoader();
-			SpringTemplateLoader springTemplateLoader = new SpringTemplateLoader(resourceLoader, templateLoaderPath);
-			Object templateSource = springTemplateLoader.findTemplateSource(templateLoaderPath);
-			Reader reader = springTemplateLoader.getReader(templateSource, templateLoaderPath);
+			Configuration freemarkerConfiguration = new Configuration();
+			freemarkerConfiguration.setClassForTemplateLoading(FreemarkerUtils.class, "/");
+			Template template = freemarkerConfiguration.getTemplate(templateClassPath);
 			
-			
-			Template t = new Template(templateLoaderPath, reader,new Configuration());
-			StringWriter out=new StringWriter();
-			t.process(datas, out);
-			out.flush();
-			re=out.toString();
-			
+			re=renderTemplate(template,datas);
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new ServiceException("渲染模板出错了，模板路径="+templateClassPath,e);
 		}
 		return re;
 	}
-	
+	private static String renderTemplate(Template template,Object datas) throws TemplateException, IOException
+	{
+		String re=null;
+		
+		StringWriter out=new StringWriter();
+		template.process(datas, out);
+		out.flush();
+		re=out.toString();
+		
+		return re;
+	}
 }
