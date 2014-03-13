@@ -128,9 +128,7 @@
 				<#noparse>
 				<select name="parameters[${param_index}].parameterValidatorRecordDtos[${validator_index}].validatorType">
 				</#noparse>
-					<#list allValidatorDefines as validatorDefine>
-		    			<option value="${validatorDefine.validatorType}">${validatorDefine.name}</option>
-		    		</#list>
+					
 				</select>
 			</td>
 			<td>
@@ -139,12 +137,6 @@
 		</tr>
 	</script>
 	
-	<#list allValidatorDefines as validatorDefine>
-	<%//这里显示所有验证器的数据输入界面 %>	
-    	<script id="parameterValidator_${validatorDefine.validatorType}_template" type="text/x-jquery-tmpl">
-			
-		</script>
-    </#list>
 	
 	<script type="text/javascript">
 		$(document).ready(function() {

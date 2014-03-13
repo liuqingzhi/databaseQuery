@@ -135,6 +135,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			
 			Map<String,Object> toViewDatas=new HashMap<String,Object>();
 			toViewDatas.put("queryDefinition", queryDefinitionInDB);
+			toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
+			
 			String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editQuery.ftl", toViewDatas);
 			
 			re.setContent(content);
