@@ -22,8 +22,11 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.WebDataBinder;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.yesmynet.query.core.dto.DataSourceConfig;
 import com.yesmynet.query.core.dto.Environment;
+import com.yesmynet.query.core.dto.InfoDTO;
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.ParameterHtmlType;
 import com.yesmynet.query.core.dto.ParameterInput;
@@ -202,10 +205,11 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @param queryDefinitionInDB
      * @return
      */
-    private String showQueryDefinition(QueryDefinition queryDefinitionInDB) {
+    private String showQueryDefinition(QueryDefinition queryDefinitionInDB,boolean ajaxShow) {
 		Map<String,Object> toViewDatas=new HashMap<String,Object>();
 		toViewDatas.put("queryDefinition", queryDefinitionInDB);
 		toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
+		toViewDatas.put("ajaxShow", ajaxShow);
 		
 		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editQuery.ftl", toViewDatas);
 		return content;
@@ -227,7 +231,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			QueryDefinition queryDefinitionInDB=null;
 		
 			try {
-				if(queryId!=null)
+				if(StringUtils.hasText(queryId))
 				{
 					queryDefinitionInDB=getQueryDefinitionById(queryId,resourceHolder);
 				}	
@@ -235,7 +239,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				re.setContent(e.getMessage());
 				return re;
 			}
-			String content = showQueryDefinition(queryDefinitionInDB);
+			String content = showQueryDefinition(queryDefinitionInDB,false);
 			re.setContent(content);
 			return re;
 		}
@@ -252,68 +256,86 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
-
+			Gson gson = new GsonBuilder().create();//.serializeNulls()
 			JdbcTemplate jdbcTemplate=null;
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> datas=new HashMap<String,Object>();
+			
+			infoDTO.setData(datas);
+			infoDTO.setSuccess(true);
+			infoDTO.setMsg("保存查询定义成功");
+			
 			try {
 				jdbcTemplate=getSystemDBTemplate(resourceHolder);
-			} catch (ServiceException e) {
-				re.setContent(e.getMessage());
-				return re;
-			}
-			
-			final QueryDefinition queryByRequest = bindDatas(queryDefinition);
-			
-			String id = queryByRequest.getId();
-			String sql="";
-			
-			if(StringUtils.hasText(id))
-			{
-				final int queryId=Integer.parseInt(id);
-						
-				sql="update m_sys_query set name=?,description=?,after_Parameter_Html=?,java_code=? where id=?";
-				jdbcTemplate.update(sql, new PreparedStatementSetter(){
-					@Override
-					public void setValues(PreparedStatement ps) throws SQLException {
-						ps.setString(1, queryByRequest.getName());
-						ps.setString(2, queryByRequest.getDescription());
-						ps.setString(3, queryByRequest.getAfterParameterHtml());
-						ps.setString(4, queryByRequest.getJavaCode());
-						ps.setInt(5, queryId);
-					}});
-			}
-			else
-			{
-				/*sql="insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)";
-				jdbcTemplate.update(sql, new PreparedStatementSetter(){
-					@Override
-					public void setValues(PreparedStatement ps) throws SQLException {
-						ps.setString(1, queryByRequest.getName());
-						ps.setString(2, queryByRequest.getDescription());
-						ps.setString(3, queryByRequest.getAfterParameterHtml());
-						ps.setString(4, queryByRequest.getJavaCode());
-					}});
-				*/
-				KeyHolder keyHolder = new GeneratedKeyHolder();
-				jdbcTemplate.update(
-				    new PreparedStatementCreator() {
-				        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
-				            PreparedStatement ps =
-				                connection.prepareStatement("insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错：SQL state [X0X0F]; error code [30000]; Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.; nested exception is java.sql.SQLException: Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.*/
+				
 
-				            ps.setString(1, queryByRequest.getName());
+				final QueryDefinition queryByRequest = bindDatas(queryDefinition);
+				
+				String id = queryByRequest.getId();
+				String sql="";
+				
+				if(StringUtils.hasText(id))
+				{
+					final int queryId=Integer.parseInt(id);
+							
+					sql="update m_sys_query set name=?,description=?,after_Parameter_Html=?,java_code=? where id=?";
+					jdbcTemplate.update(sql, new PreparedStatementSetter(){
+						@Override
+						public void setValues(PreparedStatement ps) throws SQLException {
+							ps.setString(1, queryByRequest.getName());
 							ps.setString(2, queryByRequest.getDescription());
 							ps.setString(3, queryByRequest.getAfterParameterHtml());
 							ps.setString(4, queryByRequest.getJavaCode());
+							ps.setInt(5, queryId);
+						}});
+				}
+				else
+				{
+					/*sql="insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)";
+					jdbcTemplate.update(sql, new PreparedStatementSetter(){
+						@Override
+						public void setValues(PreparedStatement ps) throws SQLException {
+							ps.setString(1, queryByRequest.getName());
+							ps.setString(2, queryByRequest.getDescription());
+							ps.setString(3, queryByRequest.getAfterParameterHtml());
+							ps.setString(4, queryByRequest.getJavaCode());
+						}});
+					*/
+					KeyHolder keyHolder = new GeneratedKeyHolder();
+					jdbcTemplate.update(
+					    new PreparedStatementCreator() {
+					        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+					            PreparedStatement ps =
+					                connection.prepareStatement("insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错：SQL state [X0X0F]; error code [30000]; Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.; nested exception is java.sql.SQLException: Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.*/
 
-				            return ps;
-				        }
-				    },
-				    keyHolder);
-				id = keyHolder.getKey()+"";
+					            ps.setString(1, queryByRequest.getName());
+								ps.setString(2, queryByRequest.getDescription());
+								ps.setString(3, queryByRequest.getAfterParameterHtml());
+								ps.setString(4, queryByRequest.getJavaCode());
+
+					            return ps;
+					        }
+					    },
+					    keyHolder);
+					id = keyHolder.getKey()+"";
+				}
+				QueryDefinition queryDefinitionById = getQueryDefinitionById(id,resourceHolder);
+				String content = showQueryDefinition(queryDefinitionById,true);
+				
+				datas.put("html", content);
+				
+			} catch (ServiceException e) {
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("保存查询定义失败，"+e.getMessage());
 			}
-			QueryDefinition queryDefinitionById = getQueryDefinitionById(id,resourceHolder);
-			String content = showQueryDefinition(queryDefinitionById);
-			re.setContent(content);
+			catch(Exception e)
+			{
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("保存查询定义失败，系统错误");
+			}
+			
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
 			
 			return re;
 		}

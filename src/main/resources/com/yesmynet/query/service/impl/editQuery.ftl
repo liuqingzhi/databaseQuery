@@ -1,3 +1,6 @@
+		<#if (!ajaxShow)>	
+			<div id="showQueryEditContainer">
+		</#if>
 				<input type="hidden" name="id" value="${(queryDefinition.id)!""}">
 				名称：<input type="text" name="name" value="${(queryDefinition.name)!""}"><br>
 				描述:<textarea rows="3" cols="100" name="description">${(queryDefinition.description)!""}</textarea><br>
@@ -82,98 +85,114 @@
 				
 				java代码:<br><textarea rows="60" cols="100" name="javaCode">${(queryDefinition.javaCode)!""}</textarea><br>
 				
-				<input type="submit" value="保存查询定义" id="saveQueryDefinition">
+				<input type="button" value="保存查询定义" id="saveQueryDefinition">
+		<#if (!ajaxShow)>	
+			</div>
+		</#if>	
 	
-	<script id="parameterInsertTemplate" type="text/x-jquery-tmpl">
-				<#noparse>
-					<tr>
-	    				<td>
-							<input type="checkbox" name="parametersToDelete" value="-1">
-	    					<input type="hidden" name="parameters[${param_index}].id" value="-1">
-	    				</td>
-	    				<td>
-	    					<input type="text" name="parameters[${param_index}].parameterInput.customName" value="">
-	    				</td>
-						<td>
-							<input type="text" name="parameters[${param_index}].parameterInput.title" value="">
-						</td>
-						<td>
-	    					<input type="text" name="parameters[${param_index}].parameterInput.style" value="">
-	    				</td>
-						<td>
-	    					<input type="text" name="parameters[${param_index}].parameterInput.styleClass" value="">
-	    				</td>	    				
-	    				<td>
-	    					<input type="text" name="parameters[${param_index}].parameterInput.description" value="">
-	    				</td>
-	    				
-	    				<td>
-	    					<select name="parameters[${param_index}].parameterInput.htmlType">
-					</#noparse>
-						        <#list allHtmlTypes as htmlType1>
-						        <option value="${htmlType1}" <#if (param.htmlType)?exists && param.htmlType==htmlType1>selected</#if>>${htmlType1.title}</option>
-						        </#list>
+	<#if (!ajaxShow)>
+		<script id="parameterInsertTemplate" type="text/x-jquery-tmpl">
 					<#noparse>
-						    </select>
-	    				</td>
-						<td>
-							
-						</td>
-	    			</tr>
-				</#noparse>
-	</script>
-	<script id="parameterValidatorTemplate" type="text/x-jquery-tmpl">
-		<tr>
-			<td>
-				<#noparse>
-				<select name="parameters[${param_index}].parameterValidatorRecordDtos[${validator_index}].validatorType">
-				</#noparse>
+						<tr>
+		    				<td>
+								<input type="checkbox" name="parametersToDelete" value="-1">
+		    					<input type="hidden" name="parameters[${param_index}].id" value="-1">
+		    				</td>
+		    				<td>
+		    					<input type="text" name="parameters[${param_index}].parameterInput.customName" value="">
+		    				</td>
+							<td>
+								<input type="text" name="parameters[${param_index}].parameterInput.title" value="">
+							</td>
+							<td>
+		    					<input type="text" name="parameters[${param_index}].parameterInput.style" value="">
+		    				</td>
+							<td>
+		    					<input type="text" name="parameters[${param_index}].parameterInput.styleClass" value="">
+		    				</td>	    				
+		    				<td>
+		    					<input type="text" name="parameters[${param_index}].parameterInput.description" value="">
+		    				</td>
+		    				
+		    				<td>
+		    					<select name="parameters[${param_index}].parameterInput.htmlType">
+						</#noparse>
+							        <#list allHtmlTypes as htmlType1>
+							        <option value="${htmlType1}" <#if (param.htmlType)?exists && param.htmlType==htmlType1>selected</#if>>${htmlType1.title}</option>
+							        </#list>
+						<#noparse>
+							    </select>
+		    				</td>
+							<td>
+								
+							</td>
+		    			</tr>
+					</#noparse>
+		</script>
+		<script id="parameterValidatorTemplate" type="text/x-jquery-tmpl">
+			<tr>
+				<td>
+					<#noparse>
+					<select name="parameters[${param_index}].parameterValidatorRecordDtos[${validator_index}].validatorType">
+					</#noparse>
+						
+					</select>
+				</td>
+				<td>
 					
-				</select>
-			</td>
-			<td>
-				
-			</td>
-		</tr>
-	</script>
-	
-	
-	<script type="text/javascript">
-		$(document).ready(function() {
+				</td>
+			</tr>
+		</script>
 		
-			//参数表格的增加行、删除行的操作
-			(function(){
-				var rowCount = $('#parameterListTable tr').length;
+		
+		<script type="text/javascript">
+			$(document).ready(function() {
+			
+				//参数表格的增加行、删除行的操作
+				(function(){
+					var rowCount = $('#parameterListTable tr').length;
+					
+					$("#parameterAddButton").click(function()
+					{
+						var newRowIndex=rowCount-2;
+						
+						var parameterRow=$( "#parameterInsertTemplate" ).tmpl({param_index:newRowIndex});
+						
+						$('#parameterListTable tr:last').before(parameterRow);
+						rowCount=rowCount+1;
+					});
+					
+					$("#parameterDeleteButton").click(function()
+					{
+						$('#parameterListTable input[type=checkbox]:checked').parents("tr").remove();
+						
+					});
+				})();
 				
-				$("#parameterAddButton").click(function()
-				{
-					var newRowIndex=rowCount-2;
-					
-					var parameterRow=$( "#parameterInsertTemplate" ).tmpl({param_index:newRowIndex});
-					
-					$('#parameterListTable tr:last').before(parameterRow);
-					rowCount=rowCount+1;
-				});
+				//保存查询的按钮
+				(function(){
+					$(document).delegate("#saveQueryDefinition", "click", function() {
+						$("#queryForm input[name='command']").val('queryDefinitionSave');
+						var toSubmitData=$('#queryForm').serialize();
+						$.post('',
+							toSubmitData,
+							function(json){
+								if(json.success && json.success===true)
+								{
+									$("#showQueryEditContainer").html(json.data.html);
+								}
+								else
+								{
+									alert(json.msg);
+								}	
+							},
+							'json'
+						);
+					});
 				
-				$("#parameterDeleteButton").click(function()
-				{
-					$('#parameterListTable input[type=checkbox]:checked').parents("tr").remove();
-					
-				});
-			})();
-			
-			//保存查询的按钮
-			(function(){
-				$("#saveQueryDefinition").click(function()
-				{
-					$("#queryForm input[name='command']").val('queryDefinitionSave');
-					$("#queryForm").submit();		
-					
-				});
-			
-			})();
-			
-		});
-
-	</script>
-
+				})();
+				
+			});
+	
+		</script>
+	</#if>
