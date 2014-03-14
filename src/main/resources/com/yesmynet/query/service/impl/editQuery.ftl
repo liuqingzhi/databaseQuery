@@ -106,7 +106,43 @@
 							function(json){
 								if(json.success && json.success===true)
 								{
-									tag.html(json.data.html).dialog({modal: true}).dialog('open');
+									tag.html(json.data.html).dialog({modal: true}).dialog({
+										minWidth: 300,
+										buttons:[
+											{
+												text:"保存",
+												click:function(){
+													$("#editParameterForm input[name='command']").val('queryParameterSave');
+													var toSubmitData=$('#editParameterForm').serialize();
+													$.post('',
+														toSubmitData,
+														function(json){
+															if(json.success && json.success===true)
+															{
+																$("#showQueryEditContainer").html(json.data.html);
+															}
+															else
+															{
+																$(this).insertBefore(json.msg);
+															}	
+														},
+														'json'
+													);
+													
+													$(this).html('显示ajax得到操作结果')
+												} 
+											},
+											{
+												text:"取消",
+												click:function(){
+													$(this).dialog("close"); 
+												} 
+											}
+											
+											
+											
+										]
+									});
 								}
 								else
 								{

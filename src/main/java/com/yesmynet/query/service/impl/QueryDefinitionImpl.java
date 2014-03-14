@@ -32,6 +32,7 @@ import com.yesmynet.query.core.dto.ParameterHtmlType;
 import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.exception.ServiceException;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
@@ -252,10 +253,32 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		Map<String,Object> toViewDatas=new HashMap<String,Object>();
 		toViewDatas.put("paramter", paramter);
 		toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
+		toViewDatas.put("yesOrNoOptions", getOptionsForYesOrNo());
 		
 		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editParameter.ftl", toViewDatas);
 		return content;
 	}
+    /**
+     * 得到表示是否的选项的值
+     * @param value
+     * @return
+     */
+    private List<SelectOption> getOptionsForYesOrNo()
+    {
+    	List<SelectOption> re=new ArrayList<SelectOption>();
+    	
+    	SelectOption yes=new SelectOption();
+    	yes.setText("是");
+    	yes.setValue("1");
+    	re.add(yes);
+    	
+    	SelectOption no=new SelectOption();
+    	no.setText("否");
+    	no.setValue("0");
+    	re.add(no);
+    	
+    	return re;
+    }
     /**
      * 根据ID得到数据库中的查询定义得到
      * @author liuqingzhi
@@ -436,8 +459,91 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re =new QueryResult();
+			JdbcTemplate jdbcTemplate=null;
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> datas=new HashMap<String,Object>();
 			
-			re.setContent("command=保存一个参数");
+			try {
+				
+				infoDTO.setData(datas);
+				infoDTO.setSuccess(true);
+				infoDTO.setMsg("保存查询定义成功");
+				
+				jdbcTemplate=getSystemDBTemplate(resourceHolder);
+				
+
+				final Parameter parameter = bindDatas(queryDefinition);
+				
+				String id = parameter.getId();
+				String sql="";
+				
+
+				if(StringUtils.hasText(id))
+				{
+					final int queryId=Integer.parseInt(id);
+							
+					sql="update m_sys_query_parameter set title=?,description=?,html_Type=?,name=?,style=?,style_class=?,option_getter_Key=?,not_show=?,last_update_time=? where id=?";
+					jdbcTemplate.update(sql, new PreparedStatementSetter(){
+						@Override
+						public void setValues(PreparedStatement ps) throws SQLException {
+							ps.setString(1, queryByRequest.getName());
+							ps.setString(2, queryByRequest.getDescription());
+							ps.setString(3, queryByRequest.getAfterParameterHtml());
+							ps.setString(4, queryByRequest.getJavaCode());
+							ps.setInt(5, queryId);
+						}});
+				}
+				else
+				{
+					KeyHolder keyHolder = new GeneratedKeyHolder();
+					jdbcTemplate.update(
+					    new PreparedStatementCreator() {
+					        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+					            PreparedStatement ps =
+					                connection.prepareStatement("insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错：SQL state [X0X0F]; error code [30000]; Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.; nested exception is java.sql.SQLException: Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.*/
+
+					            ps.setString(1, queryByRequest.getName());
+								ps.setString(2, queryByRequest.getDescription());
+								ps.setString(3, queryByRequest.getAfterParameterHtml());
+								ps.setString(4, queryByRequest.getJavaCode());
+
+					            return ps;
+					        }
+					    },
+					    keyHolder);
+					id = keyHolder.getKey()+"";
+				}
+				QueryDefinition queryDefinitionById = getQueryDefinitionById(id,resourceHolder);
+				String content = showQueryDefinition(queryDefinitionById,true);
+				
+				datas.put("html", content);
+				
+				
+			} catch (Exception e) {
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("保存查询定义失败，"+e.getMessage());
+			}
+			
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
+			
+			return re;
+		}
+		/**
+		 * 把http请求的参数绑定到一个QueryDefinition对象上
+		 * @param queryDefinition
+		 * @return
+		 */
+		private Parameter bindDatas(QueryDefinition queryDefinition)
+		{
+			Parameter re =new Parameter();
+			List<Parameter> parameters = queryDefinition.getParameters();
+			final Map<String,Object> parameterMap=new HashMap<String,Object>();
+			for (Parameter i : parameters) parameterMap.put(i.getParameterInput().getName(),i.getParameterInput().getValue());
+			
+			WebDataBinder webDataBinder =new WebDataBinder(re);
+			MutablePropertyValues propertyValues=new MutablePropertyValues(parameterMap);
+			webDataBinder.bind(propertyValues);
 			
 			return re;
 		}
