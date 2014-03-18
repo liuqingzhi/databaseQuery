@@ -140,8 +140,6 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 	        input.setName(rs.getString("name"));
 	        input.setStyle(rs.getString("style"));
 	        input.setStyleClass(rs.getString("style_class"));
-	        input.setOptionGetterKey(rs.getString("option_getter_Key"));
-	        
 			
 			return re;
 		}
@@ -494,10 +492,9 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 							ps.setString(4, parameter.getParameterInput().getName());
 							ps.setString(5, parameter.getParameterInput().getStyle());
 							ps.setString(6, parameter.getParameterInput().getStyleClass());
-							ps.setString(7, parameter.getParameterInput().getOptionGetterKey());
-							ps.setInt(8, (parameter.getParameterInput().getNotShow()!=null && !parameter.getParameterInput().getNotShow())?1:0);
-							ps.setString(9, parameter.getId());
-							ps.setString(10, parameter.getQueryDefinition().getId());
+							ps.setInt(7, (parameter.getParameterInput().getNotShow()!=null && !parameter.getParameterInput().getNotShow())?1:0);
+							ps.setString(8, parameter.getId());
+							ps.setString(9, parameter.getQueryDefinition().getId());
 							
 						}});
 				}

@@ -61,10 +61,6 @@ public class ParameterInput extends BaseDto
      */
     private Boolean eraseValue;
     /**
-     * 选项的获取器的Key值，用这个值得到合适的{@link com.yesmynet.query.core.service.ParameterOptionGetter}对象。
-     */
-    private String optionGetterKey;
-    /**
      * 直接在输入框的<input >中输出的内容,最后形成的html如下：<input elementHtml>。
      * 这种方式用来输出一些javascript，如：把本属性设为onlick='alter("aaa")',则最后生成的
      * html如下：<input onlick='alter("aaa")'>。
@@ -148,12 +144,6 @@ public class ParameterInput extends BaseDto
     {
         this.eraseValue = eraseValue;
     }
-	public String getOptionGetterKey() {
-		return optionGetterKey;
-	}
-	public void setOptionGetterKey(String optionGetterKey) {
-		this.optionGetterKey = optionGetterKey;
-	}
 	public String getElementHtml() {
 		return elementHtml;
 	}
