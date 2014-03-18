@@ -80,7 +80,7 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 			
 		}
 		ResourceHolder resourceHolder = getResourceHolder(environment.getUser());
-		settingParameterOptions(re,resourceHolder,environment);
+		//settingParameterOptions(re,resourceHolder,environment);
 		if(queryService instanceof QueryShowListner)
 		{
 			QueryShowListner listner=(QueryShowListner)queryService;
@@ -113,35 +113,6 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		}
 		
 		return re;
-	}
-	/**
-	 * 设置参数的选项
-	 * @param queryDefinition 查询定义
-	 * @param resourceHolder 当前用户可操作的资源
-	 * @param environment 当前的环境
-	 */
-	private void settingParameterOptions(QueryDefinition queryDefinition,ResourceHolder resourceHolder,Environment environment)
-	{
-		List<Parameter> parameters = queryDefinition.getParameters();
-		if(!CollectionUtils.isEmpty(parameters))
-		{
-			ResourceHolder systemResourceHolder = getSystemResourceHolder();
-			for(Parameter param:parameters)
-			{
-				ParameterInput parameterInput = param.getParameterInput();
-				String optionGetterKey = parameterInput.getOptionGetterKey();
-				if(StringUtils.hasText(optionGetterKey))
-				{
-					ParameterOptionGetter parameterOptionGetter = optionGetters.get(optionGetterKey);
-					if(parameterOptionGetter!=null)
-					{
-						List<SelectOption> options = parameterOptionGetter.getOptions(parameterInput, systemResourceHolder, resourceHolder, environment);
-						parameterInput.setOptionValues(options);
-					}
-					
-				}
-			}
-		}
 	}
 	/**
 	 * 从数据库得到查询的配置

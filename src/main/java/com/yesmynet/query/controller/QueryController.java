@@ -60,7 +60,6 @@ public class QueryController {
 	    
 	    QueryDefinition queryDefinition = queryRunService.getQueryDefinition(queryId);
 	    setHttpParameterValue(queryDefinition,request);
-	    String queryHtml = queryRenderService.getQueryHtml(queryDefinition);
 	    QueryResult queryResult =null;
 	    String queryExecuteExceptionString="";
 	    queryResult = queryRunService.run(queryDefinition);
@@ -81,6 +80,7 @@ public class QueryController {
         		queryExecuteExceptionString=printException(queryResult.getException());
         	}
         }
+	    String queryHtml = queryRenderService.getQueryHtml(queryDefinition);
 	    
 		model.addAttribute("queryHtml", queryHtml);
 		model.addAttribute("queryResult", queryResult);

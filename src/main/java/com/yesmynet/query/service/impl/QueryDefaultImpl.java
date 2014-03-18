@@ -31,6 +31,7 @@ import com.yesmynet.query.core.dto.InfoDTO;
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.ResourceHolder;
@@ -107,7 +108,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
         
         String queryExecute=QueryUtils.getParameterValue(parameters,PARAM_EXECUTE_COMMAND);//是否要执行查询
 	    boolean executeQuery=(queryExecute==null)?false:true;//是否要执行查询
-        
+        settingParameterOptions(parameters,resourceHolder);
 	    if(!executeQuery)
 	    {
 	    	//没有提交要执行查询的参数，所以不要执行本查询。
@@ -885,6 +886,50 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
         queryDefinition.setParameters(parameters);
 
         return queryDefinition;
+	}
+	/**
+	 * 设置参数的选项
+	 * @param parameters
+	 * @param resourceHolder 
+	 */
+	private void settingParameterOptions(List<Parameter> parameters,ResourceHolder resourceHolder)
+	{
+		Parameter parameterByName = QueryUtils.getParameterByName(parameters, "dbId");
+		if(parameterByName!=null)
+		{
+			List<SelectOption> dbOptions = getDBOptions(resourceHolder.getDataSourceConfigs(),true);
+			parameterByName.getParameterInput().setOptionValues(dbOptions);
+		}
+	}
+	/**
+	 * 得到要显示的所有数据库
+	 * @param dbs
+	 * @param generateAnEmptyOption
+	 * @return
+	 */
+	private List<SelectOption> getDBOptions(List<DataSourceConfig> dbs,boolean generateAnEmptyOption)
+	{
+		List<SelectOption> re=new ArrayList<SelectOption>();
+		if(generateAnEmptyOption)
+		{
+			SelectOption option=new SelectOption();
+			option.setValue("");
+			option.setText("");
+			re.add(option);
+		}
+		
+		if(!CollectionUtils.isEmpty(dbs))
+		{
+			for(DataSourceConfig db:dbs)
+			{
+				SelectOption option=new SelectOption();
+				option.setValue(db.getId());
+				option.setText(db.getName());
+				re.add(option);
+			}
+		}
+		
+		return re;
 	}
     public QueryDefinition getQueryDefinition()
     {
