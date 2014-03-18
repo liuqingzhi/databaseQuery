@@ -82,17 +82,6 @@
 				</entry>
 			</map>
 		</property>
-		<property name="optionGetters">
-			<map>
-				<entry key="resourceOption">
-					<bean class="com.yesmynet.query.core.service.run.impl.optiongetter.ResourceOptionGetter">
-						<property name="resourceType" value="DB"></property>
-						<property name="generateAnEmptyOption" value="true"></property>
-					</bean>
-				</entry>
-			</map>
-		</property>
-		
 		
 	</bean>
 	<bean id="queryRenderService" class="com.yesmynet.query.http.service.QueryRenderService">

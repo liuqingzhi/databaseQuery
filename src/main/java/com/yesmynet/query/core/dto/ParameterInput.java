@@ -7,7 +7,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.yesmynet.query.core.service.ParameterOptionGetter;
 import com.yesmynet.query.utils.MessageFormatUtils;
 
 

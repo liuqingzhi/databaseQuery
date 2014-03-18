@@ -27,7 +27,6 @@ import com.yesmynet.query.core.dto.Role;
 import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.dto.User;
 import com.yesmynet.query.core.exception.ServiceException;
-import com.yesmynet.query.core.service.ParameterOptionGetter;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.QueryShowListner;
@@ -51,10 +50,6 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	 * 资源ID和允许访问该ID资源的角色
 	 */
 	private Map<String,List<Role>> resourceRoles;
-	/**
-	 * 配置的所有可用的选项获取器
-	 */
-	private Map<String,ParameterOptionGetter> optionGetters=new HashMap<String,ParameterOptionGetter>();
 	@Override
 	public QueryDefinition getQueryDefinition(String queryId) {
 		QueryDefinition re = null;
@@ -301,11 +296,5 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	}
 	public void setResourceRoles(Map<String, List<Role>> resourceRoles) {
 		this.resourceRoles = resourceRoles;
-	}
-	public Map<String, ParameterOptionGetter> getOptionGetters() {
-		return optionGetters;
-	}
-	public void setOptionGetters(Map<String, ParameterOptionGetter> optionGetters) {
-		this.optionGetters = optionGetters;
 	}
 }
