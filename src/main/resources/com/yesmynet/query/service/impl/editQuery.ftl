@@ -126,11 +126,11 @@
 														function(json){
 															if(json.success && json.success===true)
 															{
-																$("#editParameterForm").html(json.data.html);
+																tag.html(json.data.html);
 															}
 															else
 															{
-																$(this).insertBefore(json.msg);
+																tag.append(json.msg);
 															}	
 														},
 														'json'

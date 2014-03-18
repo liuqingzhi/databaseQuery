@@ -22,8 +22,9 @@
         <result property="parameterInput.name"  column="name"/>
         <result property="parameterInput.style"  column="style"/>
         <result property="parameterInput.styleClass"  column="style_class"/>
-        <result property="parameterInput.optionGetterKey"  column="option_getter_Key"/>
-        
+        <result property="parameterInput.eraseValue"  column="erase_value"/>
+        <result property="parameterInput.notShow"  column="not_show"/>
+        <result property="parameterInput.elementHtml"  column="element_html"/>
     </resultMap>
     
 	<!--得到查询-->

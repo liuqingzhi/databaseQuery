@@ -26,7 +26,9 @@ CREATE TABLE m_sys_query_parameter
 	name  VARCHAR(200),/*自定义的查询参数名称,就是在http请求时的parameter名字*/
 	style  VARCHAR(2000),/*css 样式*/
 	style_class VARCHAR(2000),/*css class*/
+	erase_value SMALLINT DEFAULT 0,/*是否探险参数值，即不回显示值，1表示擦除，0表示不擦除*/
 	not_show SMALLINT DEFAULT 1,/*是否显示,1显示，0不显示*/
+	element_html VARCHAR(200),/*直接在元素中的片断*/
 	last_update_time TIMESTAMP/*上次更新时间*/
 	)
 	;

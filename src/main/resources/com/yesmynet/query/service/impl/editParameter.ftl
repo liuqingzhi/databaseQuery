@@ -23,8 +23,4 @@
 				<#list yesOrNoOptions as opt>
 					<option value="${opt.value}" <#if (parameter.parameterInput.notShow)?exists && parameter.parameterInput.notShow?string("1","0")==opt.value>selected</#if>>${opt.text}</option>
 				</#list><br>
-	<#--
-	得到选项的service怎么给Query使用还没有想好
-	得到参数选项值的service：<input type="text" name="parameterInput.optionGetterKey" value="${(parameter.optionGetterKey)!""}"><br>
-	-->
 </form>		
