@@ -64,25 +64,24 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     private Map<String,QueryService> commandQueryMap;
     private enum ParameterName
     {
-    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",false),
+    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",true),
     	
     	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","","",true),
     	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",true),
     	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",true),
     	
-    	QueryParameterId("参数的Id","parameterId","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterTitle("参数标题","parameterTitle","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterDescription("参数描述","parameterDescription","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterHtmlType("参数类型","parameterHtmlType","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterName("参数名称","parameterName","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterStyle("参数css","parameterStyle","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterStyleClass("参数css class","parameterStyleClass","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterEraseValue("不回显参数值","parameterEraseValue","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterOptionGetterKey("选项获取器","parameterOptionGetterKey","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterElementHtml("直接html","parameterElementHtml","",ParameterHtmlType.InputHidden,"","","",true),
-    	
-    	
+    	QueryParameterQueryId("参数的查询的Id","queryDefinition.id","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterId("参数的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterTitle("参数标题","parameterInput.title","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterDescription("参数描述","parameterInput.description","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterHtmlType("参数类型","parameterInput.htmlType","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterName("参数名称","parameterInput.name","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterStyle("参数css","parameterInput.style","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterStyleClass("参数css class","parameterInput.styleClass","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterOptionGetterKey("选项获取器","parameterInput.optionGetterKey","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterElementHtml("直接html","parameterInput.notShow","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterEraseValue("不回显参数值","parameterInput.eraseValue","",ParameterHtmlType.InputHidden,"","","",true),
     	
     	//ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",true),
     	;
@@ -127,9 +126,12 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			
 			Parameter re=new Parameter();
 			ParameterInput input =new ParameterInput();
-			re.setParameterInput(input);
-	       
+			QueryDefinition queryDefinition=new QueryDefinition();
 			
+			re.setParameterInput(input);
+			re.setQueryDefinition(queryDefinition);
+	       
+			queryDefinition.setId(rs.getString("query_id"));
 	        re.setId(rs.getString("id"));
 	        input.setId(rs.getString("id"));
 	        input.setTitle(rs.getString("title"));
@@ -251,7 +253,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      */
     private String showParameter(Parameter paramter) {
 		Map<String,Object> toViewDatas=new HashMap<String,Object>();
-		toViewDatas.put("paramter", paramter);
+		toViewDatas.put("parameter", paramter);
 		toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
 		toViewDatas.put("yesOrNoOptions", getOptionsForYesOrNo());
 		
@@ -482,15 +484,21 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				{
 					final int queryId=Integer.parseInt(id);
 							
-					sql="update m_sys_query_parameter set title=?,description=?,html_Type=?,name=?,style=?,style_class=?,option_getter_Key=?,not_show=?,last_update_time=? where id=?";
+					sql="update m_sys_query_parameter set title=?,description=?,html_Type=?,name=?,style=?,style_class=?,option_getter_Key=?,not_show=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
 					jdbcTemplate.update(sql, new PreparedStatementSetter(){
 						@Override
 						public void setValues(PreparedStatement ps) throws SQLException {
-							ps.setString(1, queryByRequest.getName());
-							ps.setString(2, queryByRequest.getDescription());
-							ps.setString(3, queryByRequest.getAfterParameterHtml());
-							ps.setString(4, queryByRequest.getJavaCode());
-							ps.setInt(5, queryId);
+							ps.setString(1, parameter.getParameterInput().getTitle());
+							ps.setString(2, parameter.getParameterInput().getDescription());
+							ps.setString(3, parameter.getParameterInput().getHtmlType()+"");
+							ps.setString(4, parameter.getParameterInput().getName());
+							ps.setString(5, parameter.getParameterInput().getStyle());
+							ps.setString(6, parameter.getParameterInput().getStyleClass());
+							ps.setString(7, parameter.getParameterInput().getOptionGetterKey());
+							ps.setInt(8, (parameter.getParameterInput().getNotShow()!=null && !parameter.getParameterInput().getNotShow())?1:0);
+							ps.setString(9, parameter.getId());
+							ps.setString(10, parameter.getQueryDefinition().getId());
+							
 						}});
 				}
 				else
@@ -500,21 +508,26 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 					    new PreparedStatementCreator() {
 					        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
 					            PreparedStatement ps =
-					                connection.prepareStatement("insert into m_sys_query (name,description,after_Parameter_Html,java_code) values (?,?,?,?)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错：SQL state [X0X0F]; error code [30000]; Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.; nested exception is java.sql.SQLException: Table 'M_SYS_QUERY' does not have an auto-generated column named 'id'.*/
+					                connection.prepareStatement("insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,option_getter_Key,not_show,last_update_time) values (?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
 
-					            ps.setString(1, queryByRequest.getName());
-								ps.setString(2, queryByRequest.getDescription());
-								ps.setString(3, queryByRequest.getAfterParameterHtml());
-								ps.setString(4, queryByRequest.getJavaCode());
+					            ps.setString(1, parameter.getQueryDefinition().getId());
+								ps.setString(2, parameter.getParameterInput().getTitle());
+								ps.setString(3, parameter.getParameterInput().getDescription());
+								ps.setString(4, parameter.getParameterInput().getHtmlType()+"");
+								ps.setString(5, parameter.getParameterInput().getName());
+								ps.setString(6, parameter.getParameterInput().getStyle());
+								ps.setString(7, parameter.getParameterInput().getStyleClass());
+								ps.setString(8, parameter.getParameterInput().getOptionGetterKey());
+								ps.setInt(9, (parameter.getParameterInput().getNotShow()!=null && !parameter.getParameterInput().getNotShow())?1:0);
 
-					            return ps;
+								return ps;
 					        }
 					    },
 					    keyHolder);
 					id = keyHolder.getKey()+"";
 				}
-				QueryDefinition queryDefinitionById = getQueryDefinitionById(id,resourceHolder);
-				String content = showQueryDefinition(queryDefinitionById,true);
+				Parameter parameterById = getParameterById(id,resourceHolder);
+				String content = showParameter(parameterById);
 				
 				datas.put("html", content);
 				

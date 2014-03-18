@@ -1,6 +1,8 @@
 		<#if (!ajaxShow)>	
+			<form id="editQueryForm">
 			<div id="showQueryEditContainer">
 		</#if>
+				<input type="hidden" name="command" value="">
 				<input type="hidden" name="id" value="${(queryDefinition.id)!""}">
 				名称：<input type="text" name="name" value="${(queryDefinition.name)!""}"><br>
 				描述:<textarea rows="3" cols="100" name="description">${(queryDefinition.description)!""}</textarea><br>
@@ -88,6 +90,9 @@
 				<input type="button" value="保存查询定义" id="saveQueryDefinition">
 		<#if (!ajaxShow)>	
 			</div>
+			</form>
+			
+			<div id="eidtParameterContainer"></div><#-- 显示编辑参数的dialog的容器 -->
 		</#if>	
 	
 	<#if (!ajaxShow)>
@@ -96,13 +101,13 @@
 			
 				//参数的增加、删除的操作
 				(function(){
-					$("#parameterAddButton").click(function()
-					{
+					$(document).delegate("#parameterAddButton", "click", function() {
 						//显示参数的dialog
-						var tag = $("<div></div>");
+						var tag = $("#eidtParameterContainer");
 						var url=$(location).attr('pathname');
+						var paramterId='';//得到参数的ID，现在还没有得到，所以每次打开的参数编辑界面都是会新增一个参数
 						$.get(url,
-							{'SystemQueryId':'queryDefinition','command':'queryParameterGetter'},
+							{'SystemQueryId':'queryDefinition','command':'queryParameterGetter','id':paramterId},
 							function(json){
 								if(json.success && json.success===true)
 								{
@@ -113,13 +118,15 @@
 												text:"保存",
 												click:function(){
 													$("#editParameterForm input[name='command']").val('queryParameterSave');
+													$("#editParameterForm input[name='queryDefinition.id']").val($("#editQueryForm input[name='id']").val());//查询定义的ID总是取查询编辑的form中的值
+													
 													var toSubmitData=$('#editParameterForm').serialize();
 													$.post('',
 														toSubmitData,
 														function(json){
 															if(json.success && json.success===true)
 															{
-																$("#showQueryEditContainer").html(json.data.html);
+																$("#editParameterForm").html(json.data.html);
 															}
 															else
 															{
@@ -128,8 +135,6 @@
 														},
 														'json'
 													);
-													
-													$(this).html('显示ajax得到操作结果')
 												} 
 											},
 											{
@@ -158,8 +163,8 @@
 				//保存查询的按钮
 				(function(){
 					$(document).delegate("#saveQueryDefinition", "click", function() {
-						$("#queryForm input[name='command']").val('queryDefinitionSave');
-						var toSubmitData=$('#queryForm').serialize();
+						$("#editQueryForm input[name='command']").val('queryDefinitionSave');
+						var toSubmitData=$('#editQueryForm').serialize();
 						$.post('',
 							toSubmitData,
 							function(json){

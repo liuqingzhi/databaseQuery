@@ -1,5 +1,7 @@
 <form id="editParameterForm">
 	<input type="hidden" name="command" value="">
+	<input type="hidden" name="queryDefinition.id" value="${(parameter.queryDefinition.id)!""}">
+	<input type="hidden" name="id" value="${(parameter.id)!""}">
 	
 	参数名称：<input type="text" name="parameterInput.name" value="${(parameter.parameterInput.name)!""}"><br>
 	参数标题：<input type="text" name="parameterInput.title" value="${(parameter.parameterInput.title)!""}"><br>
@@ -8,7 +10,7 @@
 				<#list allHtmlTypes as htmlType1>
 					<option value="${htmlType1}" <#if (parameter.parameterInput.htmlType)?exists && parameter.parameterInput.htmlType==htmlType1>selected</#if>>${htmlType1.title}</option>
 				</#list>
-			</select>
+			</select><br>
 	样式style：<input type="text" name="parameterInput.style" value="${(parameter.parameterInput.style)!""}"><br>
 	样式class：<input type="text" name="parameterInput.styleClass" value="${(parameter.parameterInput.styleClass)!""}"><br>
 	不回显参数值：<select name="parameterInput.eraseValue">
@@ -24,5 +26,5 @@
 	<#--
 	得到选项的service怎么给Query使用还没有想好
 	得到参数选项值的service：<input type="text" name="parameterInput.optionGetterKey" value="${(parameter.optionGetterKey)!""}"><br>
-	-->		
+	-->
 </form>		

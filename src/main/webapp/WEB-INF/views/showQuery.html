@@ -14,11 +14,13 @@
 		<div class="divBlock">
 			<form id="queryForm" action="" method="POST">
 				${queryHtml}
-				
-				${(queryResult.content)!""}
-				<pre>${queryExecuteExceptionString}</pre>
-				
 			</form>
+		</div>
+		<div class="divBlock">
+			
+			${(queryResult.content)!""}
+			<pre>${queryExecuteExceptionString}</pre>
+				
 		</div>
 	</body>
 </html>
