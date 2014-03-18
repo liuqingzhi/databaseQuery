@@ -484,7 +484,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				{
 					final int queryId=Integer.parseInt(id);
 							
-					sql="update m_sys_query_parameter set title=?,description=?,html_Type=?,name=?,style=?,style_class=?,option_getter_Key=?,not_show=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
+					sql="update m_sys_query_parameter set title=?,description=?,html_Type=?,name=?,style=?,style_class=?,not_show=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
 					jdbcTemplate.update(sql, new PreparedStatementSetter(){
 						@Override
 						public void setValues(PreparedStatement ps) throws SQLException {
@@ -508,7 +508,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 					    new PreparedStatementCreator() {
 					        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
 					            PreparedStatement ps =
-					                connection.prepareStatement("insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,option_getter_Key,not_show,last_update_time) values (?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
+					                connection.prepareStatement("insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,not_show,last_update_time) values (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
 
 					            ps.setString(1, parameter.getQueryDefinition().getId());
 								ps.setString(2, parameter.getParameterInput().getTitle());
@@ -517,8 +517,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 								ps.setString(5, parameter.getParameterInput().getName());
 								ps.setString(6, parameter.getParameterInput().getStyle());
 								ps.setString(7, parameter.getParameterInput().getStyleClass());
-								ps.setString(8, parameter.getParameterInput().getOptionGetterKey());
-								ps.setInt(9, (parameter.getParameterInput().getNotShow()!=null && !parameter.getParameterInput().getNotShow())?1:0);
+								ps.setInt(8, (parameter.getParameterInput().getNotShow()!=null && !parameter.getParameterInput().getNotShow())?1:0);
 
 								return ps;
 					        }
