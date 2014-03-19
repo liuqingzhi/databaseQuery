@@ -1,4 +1,5 @@
 <form id="editParameterForm">
+	<input type="hidden" name="SystemQueryId" value="${(systemQueryId)!""}"><#-- 系统参数表示要执行哪个查询 -->
 	<input type="hidden" name="command" value="">
 	<input type="hidden" name="queryDefinition.id" value="${(parameter.queryDefinition.id)!""}">
 	<input type="hidden" name="id" value="${(parameter.id)!""}">

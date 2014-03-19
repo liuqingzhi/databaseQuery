@@ -79,8 +79,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	QueryParameterName("参数名称","parameterInput.name","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterStyle("参数css","parameterInput.style","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterStyleClass("参数css class","parameterInput.styleClass","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterOptionGetterKey("选项获取器","parameterInput.optionGetterKey","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterElementHtml("直接html","parameterInput.notShow","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterOptionGetterKey("直接Html","parameterInput.elementHtml","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterElementHtml("不显示本参数","parameterInput.notShow","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterEraseValue("不回显参数值","parameterInput.eraseValue","",ParameterHtmlType.InputHidden,"","","",true),
     	
     	//ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",true),
@@ -251,11 +251,12 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @param paramter
      * @return
      */
-    private String showParameter(Parameter paramter) {
+    private String showParameter(Parameter paramter,QueryDefinition queryDefinition) {
 		Map<String,Object> toViewDatas=new HashMap<String,Object>();
 		toViewDatas.put("parameter", paramter);
 		toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
 		toViewDatas.put("yesOrNoOptions", getOptionsForYesOrNo());
+		toViewDatas.put("systemQueryId", queryDefinition.getId());
 		
 		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editParameter.ftl", toViewDatas);
 		return content;
@@ -435,7 +436,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			{
 				String parameterId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryParameterId.getParameter().getParameterInput().getName());
 				Parameter parameter = getParameterById(parameterId,resourceHolder);
-				String showParameter = showParameter(parameter);
+				String showParameter = showParameter(parameter,queryDefinition);
 				data.put("html", showParameter);
 				
 			}
@@ -529,7 +530,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 					id = keyHolder.getKey()+"";
 				}
 				Parameter parameterById = getParameterById(id,resourceHolder);
-				String content = showParameter(parameterById);
+				String content = showParameter(parameterById,queryDefinition);
 				
 				datas.put("html", content);
 				
