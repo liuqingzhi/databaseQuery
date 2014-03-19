@@ -84,10 +84,10 @@
 					var parameterId=$(this).closest('tr').data("parameterid");
 					var queryId=$("#editQueryForm input[name='id']").val();
 					
-					var tag = $("#eidtParameterContainer");
+					var tag = $("#eidtParameterContainer").html("确认要删除这个参数吗？");
 					tag.dialog({
 					      modal: true, title: '参数删除', zIndex: 10000, autoOpen: true,
-					      width: 'auto', resizable: false,
+					      width: 'auto', resizable: true,
 					      buttons: [
 					      		{
 									text:"确认",
@@ -114,7 +114,8 @@
 				$(document).delegate("#saveQueryDefinition", "click", function() {
 						$("#editQueryForm input[name='command']").val('queryDefinitionSave');
 						var toSubmitData=$('#editQueryForm').serialize();
-						$.post('',
+						var url=$(location).attr('pathname');
+						$.post(url,
 							toSubmitData,
 							function(json){
 								if(json.success && json.success===true)
@@ -134,6 +135,31 @@
 			});
 		
 		/**
+		显示查询定义的数据
+		*/
+		function showQueryDefinition(queryId,htmlContainer)
+		{
+			var url=$(location).attr('pathname');
+			var systemQueryId=$("#editQueryForm input[name='SystemQueryId']").val();
+			var queryId=$("#editQueryForm input[name='id']").val();
+			var toSubmitData={"SystemQueryId":systemQueryId,"command":"queryDefinitionAjaxGetter","id":queryId};
+			
+			$.get(url,
+				toSubmitData,
+				function(json){
+					if(json.success && json.success===true)
+					{
+						htmlContainer.html(json.data.html);
+					}
+					else
+					{
+						alert(json.msg);
+					}	
+				},
+				'json'
+			);
+		}
+		/**
 		删除参数
 		*/
 		function deleteParameter(parameterId,queryId)
@@ -148,8 +174,7 @@
 				function(json){
 					if(json.success && json.success===true)
 					{
-						//todo:要重新加载数据
-						//location.reload(true);
+						showQueryDefinition(queryId,$("#showQueryEditContainer"));
 					}
 					alert(json.msg);
 				},
@@ -177,8 +202,9 @@
 								{
 									text:"保存",
 									click:function(){
+										var queryId=$("#editQueryForm input[name='id']").val();
 										$("#editParameterForm input[name='command']").val('queryParameterSave');
-										$("#editParameterForm input[name='queryDefinition.id']").val($("#editQueryForm input[name='id']").val());//查询定义的ID总是取查询编辑的form中的值
+										$("#editParameterForm input[name='queryDefinition.id']").val(queryId);//查询定义的ID总是取查询编辑的form中的值
 										
 										var toSubmitData=$('#editParameterForm').serialize();
 										$.post(url,
@@ -187,7 +213,7 @@
 												if(json.success && json.success===true)
 												{
 													tag.html(json.data.html);
-													//todo:要重新加载数据
+													showQueryDefinition(queryId,$("#showQueryEditContainer"));
 												}
 												else
 												{

@@ -160,6 +160,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		commandQueryMap.put("queryParameterSave", new QueryParameterSave());
 		commandQueryMap.put("queryParameterGetter", new QueryParameterGetter());
 		commandQueryMap.put("queryParameterDeleter", new QueryParameterDeleter());
+		commandQueryMap.put("queryDefinitionAjaxGetter", new QueryDefinitionAjaxGetter());
 		
 	}
 	/**
@@ -475,7 +476,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				
 				infoDTO.setData(datas);
 				infoDTO.setSuccess(true);
-				infoDTO.setMsg("保存查询定义成功");
+				infoDTO.setMsg("保存参数成功");
 				
 				jdbcTemplate=getSystemDBTemplate(resourceHolder);
 				
@@ -542,7 +543,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				
 			} catch (Exception e) {
 				infoDTO.setSuccess(false);
-				infoDTO.setMsg("保存查询定义失败");//有时 +e.getMessage()中有方括号导致json出错
+				infoDTO.setMsg("保存参数失败");//有时 +e.getMessage()中有方括号导致json出错
 			}
 			
 			re.setContent(gson.toJson(infoDTO));
@@ -603,6 +604,46 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			{
 				infoDTO.setSuccess(false);
 				infoDTO.setMsg("删除参数出错了");
+			}
+			
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
+			
+			return re;
+		}
+    }
+    /**
+     * 使用ajax得到查询定义的数据
+     * @author zhi_liu
+     *
+     */
+    private class QueryDefinitionAjaxGetter implements QueryService
+    {
+
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
+				Environment environment) {
+			
+			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.parameter.getParameterInput().getName());
+			QueryResult re =new QueryResult();
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> datas=new HashMap<String,Object>();
+			QueryDefinition queryDefinitionInDB=null;
+			try {
+				infoDTO.setData(datas);
+				infoDTO.setSuccess(true);
+				infoDTO.setMsg("得到查询定义成功");
+				
+				if(StringUtils.hasText(queryId))
+				{
+					queryDefinitionInDB=getQueryDefinitionById(queryId,resourceHolder);
+				}
+				String content = showQueryDefinition(queryDefinitionInDB,true,queryDefinition);
+				datas.put("html", content);
+				
+			} catch (Exception e) {
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("得到查询定义出错了");
 			}
 			
 			re.setContent(gson.toJson(infoDTO));
