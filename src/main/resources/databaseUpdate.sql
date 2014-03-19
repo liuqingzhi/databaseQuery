@@ -32,6 +32,15 @@ CREATE TABLE m_sys_query_parameter
 	last_update_time TIMESTAMP/*上次更新时间*/
 	)
 	;
+CREATE TABLE m_sys_query_template
+	(ID INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT m_sys_query_parameter_PK PRIMARY KEY,
+	query_id int,/*查询的ID，对应了m_sys_query.id*/
+	code VARCHAR(200),/*代码*/
+	title VARCHAR(200),/*名称*/
+	content CLOB,/*模板的内容*/
+	last_update_time TIMESTAMP/*上次更新时间*/
+	)
+	;		
 CREATE TABLE m_sys_parameter_validator
 	(ID INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT m_sys_parameter_validator_PK PRIMARY KEY,
 	parameter_id int,/*参数的ID，对应了m_sys_query_parameter.id*/

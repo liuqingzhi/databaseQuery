@@ -37,6 +37,10 @@ public class QueryDefinition  extends BaseDto
 	 * 编辑查询是否完成
 	 */
 	private Boolean finished=false;
+	/**
+	 * 生成查询结果时使用的模板
+	 */
+	private List<ResultTemplate> templates;
 	public String getName()
 	{
 		return name;
@@ -85,4 +89,10 @@ public class QueryDefinition  extends BaseDto
     {
         this.finished = finished;
     }
+	public List<ResultTemplate> getTemplates() {
+		return templates;
+	}
+	public void setTemplates(List<ResultTemplate> templates) {
+		this.templates = templates;
+	}
 }

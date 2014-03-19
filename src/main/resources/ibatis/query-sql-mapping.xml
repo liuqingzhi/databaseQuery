@@ -10,6 +10,7 @@
         <result property="afterParameterHtml"  column="after_Parameter_Html"/>
         <result property="javaCode"  column="java_code"/>
         <result property="parameters" column="id" select="getQueryParameters" />
+        <result property="templates" column="id" select="getQueryTemplates" />
     </resultMap>
 	<!--得到查询定义的参数-->
 	<resultMap id="queryParameterResult" class="com.yesmynet.query.core.dto.Parameter">
@@ -26,81 +27,28 @@
         <result property="parameterInput.notShow"  column="not_show"/>
         <result property="parameterInput.elementHtml"  column="element_html"/>
     </resultMap>
-    
+    <!--得到查询定义的模板-->
+	<resultMap id="resultTemplateResult" class="com.yesmynet.query.core.dto.ResultTemplate">
+        <result property="queryDefinition.id"  column="query_id"/>
+        <result property="id"  column="id"/>
+        <result property="code"  column="code"/>
+        <result property="title"  column="title"/>
+        <result property="content"  column="content"/>
+    </resultMap>
 	<!--得到查询-->
     <select id="getQueryDefinitionById" resultMap="queryResult" parameterClass="java.lang.String">
        	select * From m_sys_query 
 		where id=#value#
     </select>
-	
     <!--得到查询定义的参数-->
     <select id="getQueryParameters" resultMap="queryParameterResult" parameterClass="java.lang.String">
        	select t1.* From m_sys_query_parameter t1
 		where t1.query_id=#value#
     </select>
-    
-    <!--更新查询-->
-    <update id="updateQueryDefinition" parameterClass="com.yesmynet.query.core.dto.QueryDefinition" >
-		UPDATE m_sys_query set 
-		name=#name#,description=#description#,after_Parameter_Html=#afterParameterHtml:VARCHAR#,finished=#finished#,
-		java_code=#javaCode#,last_update_time=CURRENT_TIMESTAMP
-		where id=#id#
-	</update>
-    <!--插入查询-->
-    <insert id="insertQueryDefinition" parameterClass="com.yesmynet.query.core.dto.QueryDefinition" >
-		insert into m_sys_query (name,description,after_Parameter_Html,system_init_create,system_default,finished,java_code,last_update_time)
-		values
-		(#name:VARCHAR#,#description:VARCHAR#,#afterParameterHtml:VARCHAR#,0,0,#finished#,#javaCode:CLOB#,CURRENT_TIMESTAMP)
-		
-		<selectKey type="post" keyProperty="id" resultClass="java.lang.String" >
-    		values IDENTITY_VAL_LOCAL()
-  		</selectKey>
-		  
-	</insert>
-	
-	<!--删除查询中定义的参数-->
-	<delete id="deleteQueryParameterByNotIn" parameterClass="java.util.Map">
-		delete from m_sys_query_parameter where query_id=#queryId:INTEGER# 
-		<isNotEmpty property="toDeleteParameterIds">
-			and id not in
-			<iterate property="toDeleteParameterIds" open="(" close=")" conjunction=",">  
-			     #toDeleteParameterIds[]:INTEGER#  
-			</iterate>
-		</isNotEmpty>
-	</delete>
-	
-    <!--更新查询定义的参数-->
-    <update id="updateQueryParameter" parameterClass="com.yesmynet.query.core.dto.Parameter" >
-		UPDATE m_sys_query_parameter set 
-		title=#parameterInput.title#,description=#parameterInput.description#,html_Type=#parameterInput.htmlType#,name=#parameterInput.name#,STYLE=#parameterInput.style#,style_class=#parameterInput.styleClass#,LAST_UPDATE_TIME=CURRENT_TIMESTAMP
-		where id=#id:INTEGER#
-	</update>
-    <!--插入查询定义的参数-->
-    <update id="insertQueryParameter" parameterClass="com.yesmynet.query.core.dto.Parameter" >
-		insert into m_sys_query_parameter (query_id,title,description,html_Type,name,STYLE,style_class,LAST_UPDATE_TIME)
-		values
-		(#queryDefinition.id:INTEGER#,#parameterInput.title#,#parameterInput.description#,#parameterInput.htmlType#,#parameterInput.name#,#parameterInput.style#,#parameterInput.styleClass:VARCHAR#,CURRENT_TIMESTAMP) 
-	</update>
-	
-	<!--删除参数使用的一个验证器的相关数据-->
-	<delete id="deleteParameterValidatorData" parameterClass="java.util.Map">
-		delete from m_sys_parameter_validator_data 
-		where validator_id=(select id from m_sys_parameter_validator where parameter_id=#parameterId:INTEGER# and validator_type=#validatorType#)
-	</delete>
-	<!--删除参数要使用的验证器-->
-	<delete id="deleteParameterValidator" parameterClass="java.util.Map">
-		delete from m_sys_parameter_validator where parameter_id=#parameterId:INTEGER# and validator_type=#validatorType#
-	</delete>
-	<!--新插入参数验证器的数据-->
-    <insert id="saveParameterValidatorData" parameterClass="java.util.Map">
-		insert into m_sys_parameter_validator_data (validator_id,data_key,data_value)
-		values
-		(#validatorId:INTEGER#,#dataKey:VARCHAR#,#dataValue:VARCHAR#)
-	</insert>
-	<!--根据参数验证器的得到验证器使用的数据-->
-    <select id="getParameterValidatorData" resultClass="java.util.HashMap" parameterClass="java.util.Map">
-       	select * From m_sys_parameter_validator_data 
-		where VALIDATOR_ID=#parameterValidatorId:INTEGER#
-	</select>
+     <!--得到查询定义的模板-->
+    <select id="getQueryTemplates" resultMap="resultTemplateResult" parameterClass="java.lang.String">
+       	select t1.* From m_sys_query_template t1
+		where t1.query_id=#value#
+    </select>
 		
 </sqlMap>
