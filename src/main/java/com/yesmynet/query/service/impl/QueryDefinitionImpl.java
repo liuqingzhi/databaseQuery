@@ -83,6 +83,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	QueryParameterElementHtml("不显示本参数","parameterInput.notShow","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterEraseValue("不回显参数值","parameterInput.eraseValue","",ParameterHtmlType.InputHidden,"","","",true),
     	
+    	ToDeleteParameterId("要删除的参数的Id","toDeleteParameterId","",ParameterHtmlType.InputHidden,"","","",true),
+    	
     	//ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",true),
     	;
     	private Parameter parameter;
@@ -157,6 +159,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		commandQueryMap.put("queryDefinitionSave", new QueryDefinitionSave());
 		commandQueryMap.put("queryParameterSave", new QueryParameterSave());
 		commandQueryMap.put("queryParameterGetter", new QueryParameterGetter());
+		commandQueryMap.put("queryParameterDeleter", new QueryParameterDeleter());
 		
 	}
 	/**
@@ -219,11 +222,13 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @param queryDefinitionInDB
      * @return
      */
-    private String showQueryDefinition(QueryDefinition queryDefinitionInDB,boolean ajaxShow) {
+    private String showQueryDefinition(QueryDefinition queryDefinitionInDB,boolean ajaxShow,QueryDefinition queryDefinition) {
 		Map<String,Object> toViewDatas=new HashMap<String,Object>();
 		toViewDatas.put("queryDefinition", queryDefinitionInDB);
 		toViewDatas.put("allHtmlTypes", ParameterHtmlType.values());
 		toViewDatas.put("ajaxShow", ajaxShow);
+		toViewDatas.put("systemQueryId", queryDefinition.getId());
+		
 		
 		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editQuery.ftl", toViewDatas);
 		return content;
@@ -287,7 +292,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @author liuqingzhi
      *
      */
-    public class QueryDefinitionGetter implements QueryService
+    private class QueryDefinitionGetter implements QueryService
     {
 
 		@Override
@@ -307,7 +312,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				re.setContent(e.getMessage());
 				return re;
 			}
-			String content = showQueryDefinition(queryDefinitionInDB,false);
+			String content = showQueryDefinition(queryDefinitionInDB,false,queryDefinition);
 			re.setContent(content);
 			return re;
 		}
@@ -318,7 +323,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @author liuqingzhi
      *
      */
-    public class QueryDefinitionSave implements QueryService
+    private class QueryDefinitionSave implements QueryService
     {
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
@@ -377,7 +382,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 					id = keyHolder.getKey()+"";
 				}
 				QueryDefinition queryDefinitionById = getQueryDefinitionById(id,resourceHolder);
-				String content = showQueryDefinition(queryDefinitionById,true);
+				String content = showQueryDefinition(queryDefinitionById,true,queryDefinition);
 				
 				datas.put("html", content);
 				
@@ -420,7 +425,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @author liuqingzhi
      *
      */
-    public class QueryParameterGetter implements QueryService
+    private class QueryParameterGetter implements QueryService
     {
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
@@ -456,7 +461,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
      * @author liuqingzhi
      *
      */
-    public class QueryParameterSave implements QueryService
+    private class QueryParameterSave implements QueryService
     {
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
@@ -563,6 +568,49 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			
 			return re;
 		}
+    }
+    /**
+     * 删除查询参数的类
+     * @author zhi_liu
+     *
+     */
+    private class QueryParameterDeleter implements QueryService
+    {
+
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
+				Environment environment) {
+			
+			String parameterId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.ToDeleteParameterId.parameter.getParameterInput().getName());
+			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.parameter.getParameterInput().getName());
+			QueryResult re =new QueryResult();
+			JdbcTemplate jdbcTemplate=null;
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> datas=new HashMap<String,Object>();
+			try
+			{
+				jdbcTemplate=getSystemDBTemplate(resourceHolder);
+				String sql="delete from m_sys_query_parameter where id=? and query_id=?";
+				int deletedRows = jdbcTemplate.update(sql, parameterId,queryId);
+				
+				if(deletedRows>0)
+				{
+					infoDTO.setSuccess(true);
+					infoDTO.setMsg("删除参数成功");
+				}
+			}
+			catch(Exception e)
+			{
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("删除参数出错了");
+			}
+			
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
+			
+			return re;
+		}
+    	
     }
 	@Override
 	public QueryDefinition getQueryDefinition() {

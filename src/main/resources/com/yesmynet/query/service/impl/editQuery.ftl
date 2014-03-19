@@ -2,6 +2,7 @@
 			<form id="editQueryForm">
 			<div id="showQueryEditContainer">
 		</#if>
+				<input type="hidden" name="SystemQueryId" value="${(systemQueryId)!""}">
 				<input type="hidden" name="command" value="">
 				<input type="hidden" name="id" value="${(queryDefinition.id)!""}">
 				名称：<input type="text" name="name" value="${(queryDefinition.name)!""}"><br>
@@ -80,6 +81,31 @@
 				});
 				//参数的删除按钮
 				$(document).delegate(".parameterDeleteButton", "click", function() {
+					var parameterId=$(this).closest('tr').data("parameterid");
+					var queryId=$("#editQueryForm input[name='id']").val();
+					
+					var tag = $("#eidtParameterContainer");
+					tag.dialog({
+					      modal: true, title: '参数删除', zIndex: 10000, autoOpen: true,
+					      width: 'auto', resizable: false,
+					      buttons: [
+					      		{
+									text:"确认",
+									click:function(){
+										deleteParameter(parameterId,queryId);
+										$(this).dialog("close"); 
+									} 
+								},
+					      		{
+									text:"取消",
+									click:function(){
+										$(this).dialog("close"); 
+									} 
+								}
+					      ]
+					      
+					});
+					
 						
 				});
 								
@@ -106,6 +132,30 @@
 
 				
 			});
+		
+		/**
+		删除参数
+		*/
+		function deleteParameter(parameterId,queryId)
+		{
+			var url=$(location).attr('pathname');
+			var systemQueryId=$("#editQueryForm input[name='SystemQueryId']").val();
+			var toSubmitData={"SystemQueryId":systemQueryId,"command":"queryParameterDeleter","toDeleteParameterId":parameterId,"id":queryId};
+			
+			
+			$.post(url,
+				toSubmitData,
+				function(json){
+					if(json.success && json.success===true)
+					{
+						//todo:要重新加载数据
+						//location.reload(true);
+					}
+					alert(json.msg);
+				},
+				'json'
+			);
+		}	
 	
 		/**
 		显示编辑参数的dialog,
@@ -137,6 +187,7 @@
 												if(json.success && json.success===true)
 												{
 													tag.html(json.data.html);
+													//todo:要重新加载数据
 												}
 												else
 												{
