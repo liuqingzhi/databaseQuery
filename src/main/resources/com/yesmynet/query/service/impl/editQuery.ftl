@@ -56,6 +56,39 @@
 				</table>
 				
 				
+				
+				freemarker模板：<br>
+				<table>
+					<tr>
+						<th>模板代码</th>
+						<th>模板标题</th>
+						<th>操作</th>
+					</tr>
+					<#if (queryDefinition.templates)?exists>
+	    			<#list queryDefinition.templates as resultTemplate>
+	    			<tr data-templateId="${resultTemplate.id}">
+	    				<td>
+	    					${(resultTemplate.code)!""}
+	    				</td>
+						<td>
+							${(resultTemplate.title)!""}
+						</td>
+	    				<td>
+	    					<input type="button" value="修改" class="templateModifyButton">
+	    					<input type="button" value="删除" class="templateDeleteButton">
+	    				</td>
+	    			</tr>	
+	    			</#list>
+	        		</#if>
+	        		<tr>
+	        			<td colspan='3'>
+	        				<input type="button" value="新增模板" id="templateAddButton">
+	        			</td>
+	        		</tr>		
+				</table>
+				
+				
+				
 				java代码:<br><textarea rows="30" cols="100" name="javaCode">${(queryDefinition.javaCode)!""}</textarea><br>
 				
 				<input type="button" value="保存查询定义" id="saveQueryDefinition">
@@ -130,7 +163,51 @@
 							'json'
 						);
 				});
-
+				
+				//模板的增加的按钮
+				$(document).delegate("#templateAddButton", "click", function() {
+					showTemplateEdit();
+				});
+				//模板的修改按钮
+				$(document).delegate(".templateModifyButton", "click", function() {
+					var templateId=$(this).closest('tr').data("templateid");//jquery data方法中的参数必须是小写的，因为html element中属性不区分大小写
+					showTemplateEdit(templateId);
+				});
+				//模板的删除按钮
+				$(document).delegate(".templateDeleteButton", "click", function() {
+					var templateId=$(this).closest('tr').data("templateid");
+					var queryId=$("#editQueryForm input[name='id']").val();
+					
+					var tag = $("#eidtParameterContainer").html("确认要删除这个模板吗？");
+					tag.dialog({
+					      modal: true, title: '参数删除', zIndex: 10000, autoOpen: true,
+					      width: 'auto', resizable: true,
+					      buttons: [
+					      		{
+									text:"确认",
+									click:function(){
+										deleteTemplate(templateId,queryId);
+										$(this).dialog("close"); 
+									} 
+								},
+					      		{
+									text:"取消",
+									click:function(){
+										$(this).dialog("close"); 
+									} 
+								}
+					      ]
+					      
+					});
+					
+						
+				});
+				
+				
+				
+				
+				
+				
 				
 			});
 		
@@ -240,6 +317,89 @@
 					{
 						alert(json.msg);
 					}	
+				},
+				'json'
+			);
+		}
+		/**
+		显示模板的编辑界面
+		*/
+		function showTemplateEdit(templateId)
+		{
+			//显示模板的dialog
+			var tag = $("#eidtParameterContainer");
+			var url=$(location).attr('pathname');
+			$.get(url,
+				{'SystemQueryId':'queryDefinition','command':'templateGetter','id':templateId},
+				function(json){
+					if(json.success && json.success===true)
+					{
+						tag.html(json.data.html).dialog({modal: true}).dialog({
+							minWidth: 700,
+							buttons:[
+								{
+									text:"保存",
+									click:function(){
+										var queryId=$("#editQueryForm input[name='id']").val();
+										$("#editTemplateForm input[name='command']").val('templateSave');
+										$("#editTemplateForm input[name='queryDefinition.id']").val(queryId);//查询定义的ID总是取查询编辑的form中的值
+										
+										var toSubmitData=$('#editTemplateForm').serialize();
+										$.post(url,
+											toSubmitData,
+											function(json){
+												if(json.success && json.success===true)
+												{
+													tag.html(json.data.html);
+													showQueryDefinition(queryId,$("#showQueryEditContainer"));
+												}
+												else
+												{
+													tag.append(json.msg);
+												}	
+											},
+											'json'
+										);
+									} 
+								},
+								{
+									text:"取消",
+									click:function(){
+										$(this).dialog("close"); 
+									} 
+								}
+								
+								
+								
+							]
+						});
+					}
+					else
+					{
+						alert(json.msg);
+					}	
+				},
+				'json'
+			);
+		}
+		/**
+		删除模板
+		*/
+		function deleteTemplate(templateId,queryId)
+		{
+			var url=$(location).attr('pathname');
+			var systemQueryId=$("#editQueryForm input[name='SystemQueryId']").val();
+			var toSubmitData={"SystemQueryId":systemQueryId,"command":"templateDeleter","ToDeleteTemplateId":templateId,"id":queryId};
+			
+			
+			$.post(url,
+				toSubmitData,
+				function(json){
+					if(json.success && json.success===true)
+					{
+						showQueryDefinition(queryId,$("#showQueryEditContainer"));
+					}
+					alert(json.msg);
 				},
 				'json'
 			);

@@ -83,8 +83,17 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	QueryParameterOptionGetterKey("直接Html","parameterInput.elementHtml","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterElementHtml("不显示本参数","parameterInput.notShow","",ParameterHtmlType.InputHidden,"","","",true),
     	QueryParameterEraseValue("不回显参数值","parameterInput.eraseValue","",ParameterHtmlType.InputHidden,"","","",true),
-    	
     	ToDeleteParameterId("要删除的参数的Id","toDeleteParameterId","",ParameterHtmlType.InputHidden,"","","",true),
+    	
+    	
+    	TemplateId("模板的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
+    	TemplateQueryId("模板的查询的Id","queryDefinition.id","",ParameterHtmlType.InputHidden,"","","",true),
+    	TemplateCode("模板代码","code","",ParameterHtmlType.InputHidden,"","","",true),
+    	TemplateTitle("模板标题","title","",ParameterHtmlType.InputHidden,"","","",true),
+    	TemplateContent("模板内容","content","",ParameterHtmlType.InputHidden,"","","",true),
+    	ToDeleteTemplateId("要删除的模板的Id","ToDeleteTemplateId","",ParameterHtmlType.InputHidden,"","","",true),
+    	
+    	
     	
     	//ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",true),
     	;
@@ -184,6 +193,10 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		commandQueryMap.put("queryParameterDeleter", new QueryParameterDeleter());
 		commandQueryMap.put("queryDefinitionAjaxGetter", new QueryDefinitionAjaxGetter());
 		
+		commandQueryMap.put("templateGetter", new TemplateGetter());
+		commandQueryMap.put("templateSave", new TemplateSave());
+		commandQueryMap.put("templateDeleter", new TemplateDeleter());
+		
 	}
 	/**
      * 得到操作系统数据库的jdbcTemplate
@@ -279,6 +292,24 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	return re;
     }
     /**
+     * 得到模板
+     * @param id 模板的Id
+     * @param resourceHolder
+     * @return
+     * @throws ServiceException
+     */
+    private ResultTemplate getTemplateById(String id,ResourceHolder resourceHolder) throws ServiceException
+    {
+    	ResultTemplate re=null;
+    	if(StringUtils.hasText(id))
+    	{
+    		JdbcTemplate jdbcTemplate=getSystemDBTemplate(resourceHolder);
+    		String sql="select t1.* From m_sys_query_template t1 where t1.id=?";
+			re = jdbcTemplate.queryForObject(sql, new Object[]{id}, templateRowMapper);
+    	}
+    	return re;
+    }
+    /**
      * 显示一个参数
      * @param paramter
      * @return
@@ -314,6 +345,84 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	
     	return re;
     }
+    /**
+     * 显示模板
+     * @param queryDefinitionInDB
+     * @return
+     */
+    private String showTemplate(ResultTemplate template,QueryDefinition queryDefinition) {
+		Map<String,Object> toViewDatas=new HashMap<String,Object>();
+		toViewDatas.put("resultTemplate", template);
+		toViewDatas.put("systemQueryId", queryDefinition.getId());
+		
+		
+		String content = FreemarkerUtils.renderTemplateInClassPath("/com/yesmynet/query/service/impl/editTemplate.ftl", toViewDatas);
+		return content;
+	}
+    @Override
+	public QueryDefinition getQueryDefinition() {
+		if(this.queryDefinition==null)
+    	{
+    		this.queryDefinition=initQueryDefinition();
+    	}
+        return this.queryDefinition;
+	}
+	@Override
+	public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder, Environment environment) {
+		QueryResult re =null;
+		List<Parameter> parameters = queryDefinition.getParameters();
+		String command = QueryUtils.getParameterValue(parameters, ParameterName.Command.getParameter().getParameterInput().getName());
+		if(!StringUtils.hasText(command))
+		{
+			command=DEFAULT_COMMAND;
+		}
+		QueryService commandQuery = commandQueryMap.get(command);
+		if(commandQuery!=null)
+			re=commandQuery.doInQuery(queryDefinition, resourceHolder, environment);
+		return re;
+	}
+	/**
+	 * 初始化本查询的所有参数
+	 * @return
+	 */
+	private QueryDefinition initQueryDefinition()
+	{
+        /**
+         * 初始化本查询的配置,包括所有参数
+         */
+		QueryDefinition queryDefinition=new QueryDefinition();
+        List<Parameter> parameters=new ArrayList<Parameter>(); 
+        for(ParameterName p:ParameterName.values())
+        {
+        	parameters.add(p.getParameter());
+        }
+        queryDefinition.setParameters(parameters);
+
+        return queryDefinition;
+	}
+	/**
+	 * 得到系统数据库
+	 * @param resourceHolder
+	 * @return
+	 */
+	private static DataSource getSystemDataSource(ResourceHolder resourceHolder)
+	{
+		DataSource re=null;
+		List<DataSourceConfig> dataSourceConfigs = resourceHolder.getDataSourceConfigs();
+		if(CollectionUtils.isNotEmpty(dataSourceConfigs))
+		{
+			for(DataSourceConfig dataSourceConfig:dataSourceConfigs)
+			{
+				if(dataSourceConfig.isSystemConfigDb())
+				{
+					re=dataSourceConfig.getDatasource();
+					break;
+				}
+			}
+		}
+		
+		return re;
+	}
     /**
      * 根据ID得到数据库中的查询定义得到
      * @author liuqingzhi
@@ -679,68 +788,180 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		}
     	
     }
-	@Override
-	public QueryDefinition getQueryDefinition() {
-		if(this.queryDefinition==null)
-    	{
-    		this.queryDefinition=initQueryDefinition();
-    	}
-        return this.queryDefinition;
-	}
-	@Override
-	public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder, Environment environment) {
-		QueryResult re =null;
-		List<Parameter> parameters = queryDefinition.getParameters();
-		String command = QueryUtils.getParameterValue(parameters, ParameterName.Command.getParameter().getParameterInput().getName());
-		if(!StringUtils.hasText(command))
-		{
-			command=DEFAULT_COMMAND;
-		}
-		QueryService commandQuery = commandQueryMap.get(command);
-		if(commandQuery!=null)
-			re=commandQuery.doInQuery(queryDefinition, resourceHolder, environment);
-		return re;
-	}
-	/**
-	 * 初始化本查询的所有参数
-	 * @return
-	 */
-	private QueryDefinition initQueryDefinition()
-	{
-        /**
-         * 初始化本查询的配置,包括所有参数
-         */
-		QueryDefinition queryDefinition=new QueryDefinition();
-        List<Parameter> parameters=new ArrayList<Parameter>(); 
-        for(ParameterName p:ParameterName.values())
-        {
-        	parameters.add(p.getParameter());
-        }
-        queryDefinition.setParameters(parameters);
-
-        return queryDefinition;
-	}
-	/**
-	 * 得到系统数据库
-	 * @param resourceHolder
-	 * @return
-	 */
-	private static DataSource getSystemDataSource(ResourceHolder resourceHolder)
-	{
-		DataSource re=null;
-		List<DataSourceConfig> dataSourceConfigs = resourceHolder.getDataSourceConfigs();
-		if(CollectionUtils.isNotEmpty(dataSourceConfigs))
-		{
-			for(DataSourceConfig dataSourceConfig:dataSourceConfigs)
-			{
-				if(dataSourceConfig.isSystemConfigDb())
+    /**
+     * 得到模板
+     * @author liuqingzhi
+     *
+     */
+    private class TemplateGetter implements QueryService
+    {
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
+				Environment environment) {
+			
+			String templateId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.TemplateId.parameter.getParameterInput().getName());
+			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.TemplateQueryId.parameter.getParameterInput().getName());
+			QueryResult re =new QueryResult();
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> datas=new HashMap<String,Object>();
+			ResultTemplate queryDefinitionInDB=null;
+			try {
+				infoDTO.setData(datas);
+				infoDTO.setSuccess(true);
+				infoDTO.setMsg("得到模板成功");
+				
+				if(StringUtils.hasText(queryId))
 				{
-					re=dataSourceConfig.getDatasource();
-					break;
+					queryDefinitionInDB=getTemplateById(queryId,resourceHolder);
+				}
+				String content = showTemplate(queryDefinitionInDB,queryDefinition);
+				datas.put("html", content);
+				
+			} catch (Exception e) {
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("得到模板出错了");
+			}
+			
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
+			
+			return re;
+		}
+    }
+    /**
+     * 保存模板
+     * @author liuqingzhi
+     *
+     */
+    private class TemplateSave implements QueryService
+    {
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			QueryResult re =new QueryResult();
+			JdbcTemplate jdbcTemplate=null;
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> datas=new HashMap<String,Object>();
+			
+			try {
+				
+				infoDTO.setData(datas);
+				infoDTO.setSuccess(true);
+				infoDTO.setMsg("保存模板成功");
+				
+				jdbcTemplate=getSystemDBTemplate(resourceHolder);
+				
+
+				final ResultTemplate template = bindDatas(queryDefinition);
+				
+				String id = template.getId();
+				String sql="";
+				if(StringUtils.hasText(id))
+				{
+					sql="update m_sys_query_template set code=?,title=?,content=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
+					jdbcTemplate.update(sql, new PreparedStatementSetter(){
+						@Override
+						public void setValues(PreparedStatement ps) throws SQLException {
+							ps.setString(1, template.getCode());
+							ps.setString(2, template.getTitle());
+							ps.setString(3, template.getContent());
+							ps.setString(4, template.getId());
+							ps.setString(5, template.getQueryDefinition().getId());
+						}});
+				}
+				else
+				{
+					KeyHolder keyHolder = new GeneratedKeyHolder();
+					jdbcTemplate.update(
+					    new PreparedStatementCreator() {
+					        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+					            PreparedStatement ps =
+					                connection.prepareStatement("insert into m_sys_query_template (query_id,code,title,content,last_update_time) values (?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
+
+					            ps.setString(1, template.getQueryDefinition().getId());
+								ps.setString(2, template.getCode());
+								ps.setString(3, template.getTitle());
+								ps.setString(4, template.getContent());
+								
+								return ps;
+					        }
+					    },
+					    keyHolder);
+					id = keyHolder.getKey()+"";
+				}
+				
+				ResultTemplate templateById = getTemplateById(id,resourceHolder);
+				String content = showTemplate(templateById,queryDefinition);
+				
+				datas.put("html", content);
+			} catch (Exception e) {
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("保存参数失败");//有时 +e.getMessage()中有方括号导致json出错
+			}
+			
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
+			
+			return re;
+		}
+		/**
+		 * 把http请求的参数绑定到一个ResultTemplate对象上
+		 * @param queryDefinition
+		 * @return
+		 */
+		private ResultTemplate bindDatas(QueryDefinition queryDefinition)
+		{
+			ResultTemplate re =new ResultTemplate();
+			List<Parameter> parameters = queryDefinition.getParameters();
+			final Map<String,Object> parameterMap=new HashMap<String,Object>();
+			for (Parameter i : parameters) parameterMap.put(i.getParameterInput().getName(),i.getParameterInput().getValue());
+			
+			WebDataBinder webDataBinder =new WebDataBinder(re);
+			MutablePropertyValues propertyValues=new MutablePropertyValues(parameterMap);
+			webDataBinder.bind(propertyValues);
+			
+			return re;
+		}
+    }
+    /**
+     * 删除模板的类
+     * @author zhi_liu
+     *
+     */
+    private class TemplateDeleter implements QueryService
+    {
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
+				Environment environment) {
+			
+			String templateId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.ToDeleteTemplateId.parameter.getParameterInput().getName());
+			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.parameter.getParameterInput().getName());
+			QueryResult re =new QueryResult();
+			JdbcTemplate jdbcTemplate=null;
+			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
+			Map<String,Object> datas=new HashMap<String,Object>();
+			try
+			{
+				jdbcTemplate=getSystemDBTemplate(resourceHolder);
+				String sql="delete from m_sys_query_template where id=? and query_id=?";
+				int deletedRows = jdbcTemplate.update(sql, templateId,queryId);
+				
+				if(deletedRows>0)
+				{
+					infoDTO.setSuccess(true);
+					infoDTO.setMsg("删除模板成功");
 				}
 			}
+			catch(Exception e)
+			{
+				infoDTO.setSuccess(false);
+				infoDTO.setMsg("删除模板出错了");
+			}
+			
+			re.setContent(gson.toJson(infoDTO));
+			re.setOnlyShowContent(true);
+			
+			return re;
 		}
-		
-		return re;
-	}
+    }
 }

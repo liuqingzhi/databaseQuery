@@ -18,7 +18,7 @@ CREATE TABLE m_sys_query
 	)
 	;
 CREATE TABLE m_sys_query_parameter
-	(ID INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT m_sys_query_parameter_PK PRIMARY KEY,
+	(ID INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT m_sys_query_template_PK PRIMARY KEY,
 	query_id int,/*查询的ID，对应了m_sys_query.id*/
 	title VARCHAR(200),/*名称*/
 	description VARCHAR(1000),/*描述*/
