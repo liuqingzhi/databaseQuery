@@ -32,6 +32,7 @@ import com.yesmynet.query.core.dto.ParameterHtmlType;
 import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.ResultTemplate;
 import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.exception.ServiceException;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
@@ -148,6 +149,27 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			return re;
 		}
 	};
+	/**
+     * 把模板的数据库查询映射为一个对象
+     */
+    private RowMapper<ResultTemplate> templateRowMapper=new RowMapper<ResultTemplate>() {
+
+		@Override
+		public ResultTemplate mapRow(ResultSet rs, int rowNum) throws SQLException {
+			
+			ResultTemplate re=new ResultTemplate();
+			QueryDefinition queryDefinition=new QueryDefinition();
+			
+			re.setQueryDefinition(queryDefinition);
+	       
+			queryDefinition.setId(rs.getString("query_id"));
+	        re.setId(rs.getString("id"));
+	        re.setCode(rs.getString("code"));
+	        re.setTitle(rs.getString("title"));
+	        re.setContent(rs.getString("content"));
+			return re;
+		}
+	};
     /**
      * 构造函数
      */
@@ -212,8 +234,12 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			
 			sql="select t1.* From m_sys_query_parameter t1 where t1.query_id=?";
 			List<Parameter> parameters = jdbcTemplate.query(sql, new Object[]{queryId}, parameterRowMapper);
-			
 			queryDefinitionInDB.setParameters(parameters);
+			
+			sql="select t1.* From m_sys_query_template t1 where t1.query_id=?";
+			List<ResultTemplate> templates = jdbcTemplate.query(sql, new Object[]{queryId}, templateRowMapper);
+			queryDefinitionInDB.setTemplates(templates);
+			
 		}
 		
     	return queryDefinitionInDB;
