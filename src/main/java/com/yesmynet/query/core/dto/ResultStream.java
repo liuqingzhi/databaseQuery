@@ -14,7 +14,7 @@ public interface ResultStream {
 	 * 得到流的字节数
 	 * @return
 	 */
-	public int getLength();
+	public long getLength();
 	/**
 	 * 下载的文件的保存名称 
 	 * @return

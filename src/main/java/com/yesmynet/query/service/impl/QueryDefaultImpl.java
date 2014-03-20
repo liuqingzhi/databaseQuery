@@ -1,6 +1,11 @@
 package com.yesmynet.query.service.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.lang.reflect.Type;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,12 +18,14 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.StatementCallback;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
@@ -36,6 +43,7 @@ import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.ParameterLayoutDTO;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.ResultStream;
 import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
@@ -88,6 +96,8 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 		commandQueryMap=new HashMap<String,QueryService>();
 		commandQueryMap.put(null, new EmptyResult());
 		commandQueryMap.put("", new ExecuteDBQuery());
+		commandQueryMap.put("streamLobQuery", new StreamLobQuery());
+		
 		
 	}
 	public QueryResult doInQuery(QueryDefinition queryDefinition,ResourceHolder resourceHolder,Environment environment)
@@ -822,7 +832,6 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 			QueryResult re=new QueryResult();
 			return re;
 		}
-		
 	}
 	/**
 	 * 执行数据库查询
@@ -927,7 +936,88 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 	        re.setOnlyShowContent(ajaxRequest);
 	        return re;
 		}
-		
+	}
+	/**
+	 * 表示空的查询
+	 * @author liuqingzhi
+	 *
+	 */
+	private class StreamLobQuery implements QueryService
+	{
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			QueryResult re=new QueryResult();
+			
+			List<Parameter> parameters = queryDefinition.getParameters();
+			final String sql=QueryUtils.getParameterValue(parameters,ParameterName.SQL.getParameter().getParameterInput().getName());
+	        final Boolean ajaxRequest=StringUtils.hasText(QueryUtils.getParameterValue(parameters,ParameterName.AjaxRequest.getParameter().getParameterInput().getName()));
+	        String dbId = QueryUtils.getParameterValue(parameters,ParameterName.DbId.getParameter().getParameterInput().getName());
+	        
+	        
+	        //dbId="derbyDataSourceId";
+			final InfoDTO<DataSourceConfig> dataSourceConfigInfoDTO = getDataSourceConfig(dbId,resourceHolder);
+			ResultStream stream=new ResultStream(){
+				
+				@Override
+				public long getLength() {
+					
+					DataSourceConfig dataSource = dataSourceConfigInfoDTO.getData();
+					JdbcTemplate jdbcTemplate=new JdbcTemplate(dataSource.getDatasource());
+					Long length = jdbcTemplate.execute(new StatementCallback<Long>(){
+						@Override
+						public Long doInStatement(Statement stmt)
+								throws SQLException, DataAccessException {
+							ResultSet resultSet = stmt.executeQuery(sql);
+							long length=0;
+							if(resultSet.next())
+							{
+								Clob clob = resultSet.getClob(1);
+								length=clob.length();
+							}
+							return length;
+						}});
+					
+					return length;
+				}
+
+				@Override
+				public String getFileName() {
+					return "test";
+				}
+
+				@Override
+				public void write(final OutputStream outputStream,
+						QueryDefinition queryDefinition,
+						ResourceHolder resourceHolder, Environment environment) {
+					
+					DataSourceConfig dataSource = dataSourceConfigInfoDTO.getData();
+					JdbcTemplate jdbcTemplate=new JdbcTemplate(dataSource.getDatasource());
+					jdbcTemplate.execute(new StatementCallback<Void>(){
+
+						@Override
+						public Void doInStatement(Statement stmt)
+								throws SQLException, DataAccessException {
+							ResultSet resultSet = stmt.executeQuery(sql);
+							if(resultSet.next())
+							{
+								Clob clob = resultSet.getClob(1);
+								InputStream asciiStream = clob.getAsciiStream();
+								try {
+									IOUtils.copy(asciiStream, outputStream);
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+							}
+							
+							return null;
+						}});
+				}};
+				
+				re.setResultStream(stream);
+			
+			return re;
+		}
 	}
 	/**
 	 * 初始化本查询的所有参数
