@@ -2,6 +2,7 @@ package com.yesmynet.query.core.service.run.impl;
 
 import groovy.lang.GroovyClassLoader;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.dto.RedisConfig;
+import com.yesmynet.query.core.dto.ResultStream;
 import com.yesmynet.query.core.dto.Role;
 import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.dto.User;
@@ -108,6 +110,13 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		}
 		
 		return re;
+	}
+	@Override
+	public void runResultStream(OutputStream outputStream, ResultStream resultStream,QueryDefinition queryDefinition) 
+	{
+		Environment environment = getEnvironment();
+		ResourceHolder resourceHolder = getResourceHolder(environment.getUser());
+		resultStream.write(outputStream, queryDefinition, resourceHolder, environment);
 	}
 	/**
 	 * 从数据库得到查询的配置
@@ -297,4 +306,5 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	public void setResourceRoles(Map<String, List<Role>> resourceRoles) {
 		this.resourceRoles = resourceRoles;
 	}
+	
 }

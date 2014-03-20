@@ -22,6 +22,33 @@
 			<pre>${queryExecuteExceptionString}</pre>
 				
 		</div>
+		<script type="text/javascript">
+			$(document).delegate(".dbQueryViewLOb", "click", function() {
+				
+				var tag = $("#eidtParameterContainer").html("确认要删除这个参数吗？");
+				tag.dialog({
+				      modal: true, title: '参数删除', zIndex: 10000, autoOpen: true,
+				      width: 'auto', resizable: true,
+				      buttons: [
+				      		{
+								text:"确认",
+								click:function(){
+									$(this).dialog("close"); 
+								} 
+							},
+				      		{
+								text:"取消",
+								click:function(){
+									$(this).dialog("close"); 
+								} 
+							}
+				      ]
+				      
+				});
+								
+			});
+		
+		</script>
 	</body>
 </html>
 

@@ -722,7 +722,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
                         if (strCurrentColumnTypeName.equalsIgnoreCase("blob"))
                             strCurrentColumnValue="&lt;Blob&gt;";
                         else if (strCurrentColumnTypeName.equalsIgnoreCase("clob"))
-                            strCurrentColumnValue="&lt;Clob&gt;";
+                            strCurrentColumnValue="&lt;Clob&gt; <br><input type='button' value='查看' class='dbQueryViewLOb'><input type='button' value='另存为' class='dbQueryDownloadLOb'>";
                         else if (strCurrentColumnTypeName.equalsIgnoreCase("text"))
                             strCurrentColumnValue="&lt;Text&gt;";
                         else if (strCurrentColumnTypeName.equalsIgnoreCase("image"))

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.ResultStream;
 import com.yesmynet.query.core.service.run.QueryRunService;
 import com.yesmynet.query.http.dto.SystemParameterName;
 import com.yesmynet.query.http.service.QueryRenderService;
@@ -65,9 +67,15 @@ public class QueryController {
 	    queryResult = queryRunService.run(queryDefinition);
 	    if(queryResult!=null )
         {
-        	if(queryResult.getContentInputStream()!=null)
+        	if(queryResult.getResultStream()!=null)
             {	
-        		FileCopyUtils.copy(queryResult.getContentInputStream(), response.getOutputStream());
+        		ResultStream resultStream = queryResult.getResultStream();
+        		response.setHeader("Content-Type","");
+        		response.setHeader("Content-Length", resultStream.getLength()+"");
+        		response.setHeader("Content-Disposition", "inline; filename=\"" + resultStream.getFileName() + "\"");
+
+        		ServletOutputStream outputStream = response.getOutputStream();
+        		queryRunService.runResultStream(outputStream, queryResult.getResultStream(), queryDefinition);
         		return null;
             }
         	else if(queryResult.getOnlyShowContent()!=null && queryResult.getOnlyShowContent())

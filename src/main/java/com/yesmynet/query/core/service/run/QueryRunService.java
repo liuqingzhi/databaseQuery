@@ -1,5 +1,6 @@
 package com.yesmynet.query.core.service.run;
 
+import java.io.OutputStream;
 import java.util.List;
 
 import javax.management.Query;
@@ -7,6 +8,7 @@ import javax.sql.DataSource;
 
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.ResultStream;
 
 
 /**
@@ -30,4 +32,10 @@ public interface QueryRunService
 	 * @return 查询结果，其中包含了查询的定义
 	 */
 	public QueryResult run(QueryDefinition queryDefinition);
+	/**
+	 * 执行查询结果中的流的操作
+	 * @param outputStream
+	 * @param queryDefinition
+	 */
+	public void runResultStream(OutputStream outputStream,ResultStream resultStream,QueryDefinition queryDefinition);
 }
