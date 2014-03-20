@@ -63,15 +63,4 @@ public class QueryUtils {
     	}
     	return re;
     }
-    /**
-	 * 把JSON字符串转成一个List<Parameter>对象。
-	 * @return
-	 */
-	public static List<Parameter> getParametersFromJson(String jsonList)
-	{
-        Type collectionType = new TypeToken<List<Parameter>>(){}.getType();
-        List<Parameter> fromJson = gson.fromJson(jsonList, collectionType);
-        
-        return fromJson;
-	}
 }

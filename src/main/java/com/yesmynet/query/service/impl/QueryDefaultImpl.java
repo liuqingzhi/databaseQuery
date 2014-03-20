@@ -29,6 +29,9 @@ import com.yesmynet.query.core.dto.DatabaseDialect;
 import com.yesmynet.query.core.dto.Environment;
 import com.yesmynet.query.core.dto.InfoDTO;
 import com.yesmynet.query.core.dto.Parameter;
+import com.yesmynet.query.core.dto.ParameterHtmlType;
+import com.yesmynet.query.core.dto.ParameterInput;
+import com.yesmynet.query.core.dto.ParameterLayoutDTO;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.dto.SelectOption;
@@ -199,6 +202,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
         	
         }
         
+        resultContent.append("<div id='dbqueryDialogContainer'></div>");
         
         re.setContent(resultContent.toString());
         re.setOnlyShowContent(ajaxRequest);
@@ -773,7 +777,61 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
         return re;
             
     }
-    
+    /**
+     * 表示查询中定义的所有参数
+     * @author liuqingzhi
+     *
+     */
+    private enum ParameterName
+    {
+    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",false,null,null,null),
+    	ExecuteButton("查询按钮","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\"#queryForm\").submit();'",false,30,1,1),
+    	
+    	SQL("SQL脚本","sqlCode","",ParameterHtmlType.TextArea,"width:1000px; height:200px;","","",false,10,1,2),
+    	PageSize("每页显示的记录数","pageSize","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
+    	CurrentPage("当前页码","currentPage","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
+    	AjaxRequest("是否为ajax请求","ajaxRequest","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
+    	SelectedSql("选中的sql","selectedSql","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
+    	DbId("数据库","dbId","",ParameterHtmlType.Select,null,null,null,false,20,1,1),
+    	
+    	;
+    	private Parameter parameter;
+    	/**
+    	 * 构造函数
+    	 * @param title 参数标题
+    	 * @param description 参数描述
+    	 * @param htmlType 参数html控件类型
+    	 * @param name 参数名称
+    	 * @param style 样式
+    	 * @param styleCss 样式的class
+    	 * @param elementHtml 直接在html中输出的内容
+    	 */
+    	private ParameterName(String title,String name,String description,ParameterHtmlType htmlType,String style,String styleClass,String elementHtml,Boolean notShow,Integer sort,Integer rowSpan,Integer columnSpan)
+    	{
+    		parameter=new Parameter();
+    		ParameterInput input=new ParameterInput();
+    		ParameterLayoutDTO parameterLayoutDTO=new ParameterLayoutDTO();
+    		
+    		input.setTitle(title);
+    		input.setDescription(description);
+    		input.setHtmlType(htmlType);
+    		input.setName(name);
+    		input.setStyle(style);
+    		input.setStyleClass(styleClass);
+    		input.setElementHtml(elementHtml);
+    		input.setNotShow(notShow);
+    		
+    		parameterLayoutDTO.setSort(sort);
+    		parameterLayoutDTO.setRowSpan(rowSpan);
+    		parameterLayoutDTO.setColumnSpan(columnSpan);
+    		
+    		parameter.setParameterInput(input);
+    		parameter.setParameterLayoutDTO(parameterLayoutDTO);
+    	}
+		public Parameter getParameter() {
+			return parameter;
+		}
+    }
 	
 	/**
 	 * 表示分页查询的参数
@@ -868,21 +926,10 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 		QueryDefinition queryDefinition=new QueryDefinition();
         List<Parameter> parameters=new ArrayList<Parameter>(); 
         
-        StringBuilder paramJsons=new StringBuilder();
-        
-        paramJsons.append("[");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"SQL脚本\",\"description\":\"功能提示：1、可以使用F8执行SQL；2、可以选中一部分SQL执行，然后执行。\",\"htmlType\":\"TextArea\",\"name\":\"sqlCode\",\"style\":\"width: 1000px; height: 200px;\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null,'parameterLayoutDTO':{'sort':'10','rowSpan':'1','columnSpan':'2'}},");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"每页显示的记录数\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"pageSize\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"当前页码\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"currentPage\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"是否为ajax请求\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"ajaxRequest\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"选中的sql\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"selectedSql\",\"style\":\"\",\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":true,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"数据库\",\"description\":\"\",\"htmlType\":\"Select\",\"name\":\"dbId\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":\"resourceOption\",\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null,'parameterLayoutDTO':{'sort':'20','rowSpan':'1','columnSpan':'1'}},");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"查询命令\",\"description\":\"\",\"htmlType\":\"InputHidden\",\"name\":\"command\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":null,\"id\":null},\"validatorRules\":null,\"id\":null},");
-        paramJsons.append("{\"queryDefinition\":null,\"parameterInput\":{\"title\":\"查询按钮\",\"description\":\"\",\"htmlType\":\"Button\",\"name\":\"queryButton\",\"style\":null,\"styleClass\":null,\"values\":null,\"OptionValues\":null,\"eraseValue\":null,\"optionGetterKey\":null,\"elementHtml\":\"onclick='$(\\\"#queryForm\\\").submit();'\",\"id\":null},\"validatorRules\":null,\"id\":null,'parameterLayoutDTO':{'sort':'30','rowSpan':'1','columnSpan':'1'}}");
-        
-        paramJsons.append("]");
-        
-        parameters = QueryUtils.getParametersFromJson(paramJsons.toString());
+        for(ParameterName p:ParameterName.values())
+        {
+        	parameters.add(p.getParameter());
+        }
         queryDefinition.setParameters(parameters);
 
         return queryDefinition;
