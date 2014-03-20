@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.sql.DataSource;
@@ -75,138 +77,31 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
      */
     private Long pageSizeDefault=20L;
     /**
-     * 在request参数名称，用来得到要执行的sql
+     * 表示提交的参数与要执行的命令的Map
      */
-    private final String PARAM_SQL="sqlCode";
+    private Map<String,QueryService> commandQueryMap;
     /**
-     * 在request参数名称，用来得到分页时每页的记录数
+     * 构造函数
      */
-    private final String PARAM_PAGE_SIZE="pageSize";
-    /**
-     * 在request参数名称，用来得到当前页码
-     */
-    private final String PARAM_CURRENT_PAGE="currentPage";
-    /**
-     * 是否为ajax请求，只要本参数有值（不管值是什么）就是ajax请求
-     */
-    private final String PARAM_REQUEST_BY_AJAX="ajaxRequest";
-    /**
-     * 用户选中的Sql，因为可以在整个输入的SQL中选中一部分，然后只执行选中的这部分SQL
-     */
-    private final String PARAM_SELECTED_SQL="selectedSql";
-    /**
-     * 用户选择的数据库配置的ID，表示要在这个数据库上执行用户输入的SQL
-     */
-    private final String PARAM_DATABASE_ID="dbId";
-    /**
-     * 是否执行查询的参数，如果本参数有值则执行查询，否则不执行查询
-     */
-    private final String PARAM_EXECUTE_COMMAND="command";
-    
-    
-    public QueryResult doInQuery(QueryDefinition queryDefinition,ResourceHolder resourceHolder,Environment environment)
+    public QueryDefaultImpl() {
+		super();
+		commandQueryMap=new HashMap<String,QueryService>();
+		commandQueryMap.put(null, new EmptyResult());
+		commandQueryMap.put("", new ExecuteDBQuery());
+		
+	}
+	public QueryResult doInQuery(QueryDefinition queryDefinition,ResourceHolder resourceHolder,Environment environment)
     {
-        QueryResult re=new QueryResult();
-        List<Parameter> parameters = queryDefinition.getParameters();
-        
-        String queryExecute=QueryUtils.getParameterValue(parameters,PARAM_EXECUTE_COMMAND);//是否要执行查询
-	    boolean executeQuery=(queryExecute==null)?false:true;//是否要执行查询
-        settingParameterOptions(parameters,resourceHolder);
-	    if(!executeQuery)
-	    {
-	    	//没有提交要执行查询的参数，所以不要执行本查询。
-	    	return re;
-	    }
-        
-        StringBuilder resultContent=new StringBuilder();
-        String sql=QueryUtils.getParameterValue(parameters,PARAM_SQL);
-        String selectedSql=QueryUtils.getParameterValue(parameters,PARAM_SELECTED_SQL);
-        final Boolean ajaxRequest=StringUtils.hasText(QueryUtils.getParameterValue(parameters,PARAM_REQUEST_BY_AJAX));
-        String dbId = QueryUtils.getParameterValue(parameters,PARAM_DATABASE_ID);
-        sql=StringUtils.hasText(selectedSql)?selectedSql:sql;//如果选中了sql，则只执行选中的部分
-        List<SqlDto> sqlList=SqlSplitUtils.splitSql(sql);
-        
-        
-        InfoDTO<DataSourceConfig> dataSourceConfigInfoDTO = getDataSourceConfig(dbId,resourceHolder);
-        
-        if(!dataSourceConfigInfoDTO.isSuccess())
-        {
-        	 re.setContent(dataSourceConfigInfoDTO.getMsg());
-             re.setOnlyShowContent(ajaxRequest);
-             return re;
-        }
-        DataSourceConfig dataSourceConfig = dataSourceConfigInfoDTO.getData();
-        
-        if(!CollectionUtils.isEmpty(sqlList))
-        {
-        	boolean tabbedContent=true;//是否使用tab选项卡显示内容
-        	int i=1;
-        	StringBuilder tabHeaders=new StringBuilder();
-        	StringBuilder tabContents=new StringBuilder();
-        	
-        	tabHeaders.append("<ul>");
-        	
-        	if(sqlList.size()>1) tabbedContent=true;
-        	
-        	for(SqlDto sqlDto:sqlList)
-        	{
-        		String sqlResult="";
-        		String tabShowResultDivId=getRandomString();//getShowResultDivId(i);
-        		Long pageSize=getParameterValue(parameters,PARAM_PAGE_SIZE,pageSizeDefault);
-				Long currentPage=getParameterValue(parameters,PARAM_CURRENT_PAGE,1L);
-        		try
-				{
-					if(sqlDto.isSelect())
-					{
-						//sqlResult=executeSelectSql(sqlDto.getSql(),pageSize,currentPage,dataSourceConfig,i,tabShowResultDivId);
-						sqlResult=executeSelectSqlPageInStatement(sqlDto.getSql(),pageSize,currentPage,dataSourceConfig,i,tabShowResultDivId);
-					}
-					else
-					{
-						sqlResult=executeUpdataSql(sqlDto.getSql(),dataSourceConfig);
-					}
-				}
-				catch (Exception e)
-				{
-					sqlResult=doWithException(e);
-				}
-        		String tabHeader = getTabHeader(sqlDto,i,tabShowResultDivId);
-        		String tabContent=sqlResult;
-        		
-        		if(tabbedContent && !ajaxRequest)
-        			tabContent=getTabContent(sqlResult,tabShowResultDivId);
-        		
-        		tabHeaders.append(tabHeader);
-        		tabContents.append(tabContent);
-        		
-        		i++;
-        	}
-        	tabHeaders.append("</ul>\n");
-        	if(tabbedContent && !ajaxRequest)
-        	{
-        		resultContent.append("<div id='tabs'>\n");
-            	resultContent.append(tabHeaders);
-            	resultContent.append(tabContents);
-            	resultContent.append("</div>\n");
-
-            	resultContent.append("\n").append("<script>\n").append("$(function() {\n").append("$( \"#tabs\" ).tabs();\n").append("});\n").append("</script>\n");
-        	}
-        	else
-        	{
-        		resultContent.append(tabContents);
-        	}
-        	
-        	String pageNavigationScriptFunction = getPageNavigationScriptFunction(queryDefinition);
-        	resultContent.append(pageNavigationScriptFunction);
-        	resultContent.append(getExecuteSelectedSqlScript());
-        	
-        }
-        
-        resultContent.append("<div id='dbqueryDialogContainer'></div>");
-        
-        re.setContent(resultContent.toString());
-        re.setOnlyShowContent(ajaxRequest);
-        return re;
+		QueryResult re =null;
+		List<Parameter> parameters = queryDefinition.getParameters();
+		String command = QueryUtils.getParameterValue(parameters, ParameterName.Command.getParameter().getParameterInput().getName());
+		
+		settingParameterOptions(parameters,resourceHolder);
+		
+		QueryService commandQuery = commandQueryMap.get(command);
+		if(commandQuery!=null)
+			re=commandQuery.doInQuery(queryDefinition, resourceHolder, environment);
+		return re;
     }
     /**
      * 根据用户选择的数据库ID得到数据库
@@ -371,7 +266,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     	re.append("			var datasourceId=$(\"#\"+toReplaceContentDivId+\" #SystemDataSourceId\").val();\n");
     	re.append("			var sql=$(\"#\"+toReplaceContentDivId+\" #sqlCode\").val();\n");
     	re.append("			var queryId='").append(queryDefinition.getId()).append("';\n");
-    	re.append("			var dbId=$(\"[name='").append(PARAM_DATABASE_ID).append("']\").val();\n");
+    	re.append("			var dbId=$(\"[name='").append(ParameterName.DbId.getParameter().getParameterInput().getName()).append("']\").val();\n");
     	
     	
     	re.append("			\n");
@@ -379,7 +274,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     	re.append("				  type: \"POST\",\n");
     	re.append("				  url: url,\n");
     	re.append("				  dataType:\"html\",\n");
-    	re.append("				  data: { \"").append(SystemParameterName.QueryId.getParamerName()).append("\":queryId,\"").append(PARAM_DATABASE_ID).append("\":dbId,\"command\":\"pageExeute\",\"ajaxRequest\":\"1\",\"SystemDataSourceId\": datasourceId, \"sqlCode\": sql,\"currentPage\":targetPageNum },\n");
+    	re.append("				  data: { \"").append(SystemParameterName.QueryId.getParamerName()).append("\":queryId,\"").append(ParameterName.DbId.getParameter().getParameterInput().getName()).append("\":dbId,\"command\":\"pageExeute\",\"ajaxRequest\":\"1\",\"SystemDataSourceId\": datasourceId, \"sqlCode\": sql,\"currentPage\":targetPageNum },\n");
     	re.append("				  beforeSend:function() {\n");
     	re.append("				  	var ajaxtipImage =$( \"#ajaxtipImage\" );\n");
     	re.append("				  	var ajaxtip=$( \"#ajaxtip\" );\n");
@@ -562,11 +457,11 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     	if(pagingInfo!=null)
     	{
 	    	//re.append("<div id='").append(sqlIndexDivId).append("' style='display:none;'>");
-	    	re.append("<textarea id='"+ PARAM_SQL +"' style='display:none;'>").append(sql).append("</textarea>\n");//使用textarea以避免sql中的特殊符号导致html出错
+	    	re.append("<textarea id='"+ ParameterName.SQL.getParameter().getParameterInput().getName() +"' style='display:none;'>").append(sql).append("</textarea>\n");//使用textarea以避免sql中的特殊符号导致html出错
 	    	//re.append("<input type='hidden' id='"+ SystemParameterName.DataSourceId.getParamerName() +"' value='"+ dataSourceConfig.getId() +"'>\n");
-	    	re.append("<input type='hidden' id='"+ PARAM_PAGE_SIZE +"' value='"+ pagingInfo.getPageSize() +"'>\n");
-	    	re.append("<input type='hidden' id='"+ PARAM_CURRENT_PAGE +"' value='"+ pagingInfo.getCurrentPage() +"'>\n");
-	    	re.append("<input type='hidden' id='"+ PARAM_REQUEST_BY_AJAX +"' value=''>\n");
+	    	re.append("<input type='hidden' id='"+ ParameterName.PageSize.getParameter().getParameterInput().getName() +"' value='"+ pagingInfo.getPageSize() +"'>\n");
+	    	re.append("<input type='hidden' id='"+ ParameterName.CurrentPage.getParameter().getParameterInput().getName() +"' value='"+ pagingInfo.getCurrentPage() +"'>\n");
+	    	re.append("<input type='hidden' id='"+ ParameterName.AjaxRequest.getParameter().getParameterInput().getName() +"' value=''>\n");
 	    	
 	    	//re.append("</div>");
     	}
@@ -911,6 +806,126 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 		public void setRecordEnd(Long recordEnd)
 		{
 			this.recordEnd = recordEnd;
+		}
+		
+	}
+	/**
+	 * 表示空的查询
+	 * @author liuqingzhi
+	 *
+	 */
+	private class EmptyResult implements QueryService
+	{
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			QueryResult re=new QueryResult();
+			return re;
+		}
+		
+	}
+	/**
+	 * 执行数据库查询
+	 * @author liuqingzhi
+	 *
+	 */
+	private class ExecuteDBQuery implements QueryService
+	{
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			QueryResult re=new QueryResult();
+	        List<Parameter> parameters = queryDefinition.getParameters();
+	        
+	        StringBuilder resultContent=new StringBuilder();
+	        String sql=QueryUtils.getParameterValue(parameters,ParameterName.SQL.getParameter().getParameterInput().getName());
+	        String selectedSql=QueryUtils.getParameterValue(parameters,ParameterName.SelectedSql.getParameter().getParameterInput().getName());
+	        final Boolean ajaxRequest=StringUtils.hasText(QueryUtils.getParameterValue(parameters,ParameterName.AjaxRequest.getParameter().getParameterInput().getName()));
+	        String dbId = QueryUtils.getParameterValue(parameters,ParameterName.DbId.getParameter().getParameterInput().getName());
+	        sql=StringUtils.hasText(selectedSql)?selectedSql:sql;//如果选中了sql，则只执行选中的部分
+	        List<SqlDto> sqlList=SqlSplitUtils.splitSql(sql);
+	        
+	        
+	        InfoDTO<DataSourceConfig> dataSourceConfigInfoDTO = getDataSourceConfig(dbId,resourceHolder);
+	        
+	        if(!dataSourceConfigInfoDTO.isSuccess())
+	        {
+	        	 re.setContent(dataSourceConfigInfoDTO.getMsg());
+	             re.setOnlyShowContent(ajaxRequest);
+	             return re;
+	        }
+	        DataSourceConfig dataSourceConfig = dataSourceConfigInfoDTO.getData();
+	        
+	        if(!CollectionUtils.isEmpty(sqlList))
+	        {
+	        	boolean tabbedContent=true;//是否使用tab选项卡显示内容
+	        	int i=1;
+	        	StringBuilder tabHeaders=new StringBuilder();
+	        	StringBuilder tabContents=new StringBuilder();
+	        	
+	        	tabHeaders.append("<ul>");
+	        	
+	        	if(sqlList.size()>1) tabbedContent=true;
+	        	
+	        	for(SqlDto sqlDto:sqlList)
+	        	{
+	        		String sqlResult="";
+	        		String tabShowResultDivId=getRandomString();//getShowResultDivId(i);
+	        		Long pageSize=getParameterValue(parameters,ParameterName.PageSize.getParameter().getParameterInput().getName(),pageSizeDefault);
+					Long currentPage=getParameterValue(parameters,ParameterName.CurrentPage.getParameter().getParameterInput().getName(),1L);
+	        		try
+					{
+						if(sqlDto.isSelect())
+						{
+							//sqlResult=executeSelectSql(sqlDto.getSql(),pageSize,currentPage,dataSourceConfig,i,tabShowResultDivId);
+							sqlResult=executeSelectSqlPageInStatement(sqlDto.getSql(),pageSize,currentPage,dataSourceConfig,i,tabShowResultDivId);
+						}
+						else
+						{
+							sqlResult=executeUpdataSql(sqlDto.getSql(),dataSourceConfig);
+						}
+					}
+					catch (Exception e)
+					{
+						sqlResult=doWithException(e);
+					}
+	        		String tabHeader = getTabHeader(sqlDto,i,tabShowResultDivId);
+	        		String tabContent=sqlResult;
+	        		
+	        		if(tabbedContent && !ajaxRequest)
+	        			tabContent=getTabContent(sqlResult,tabShowResultDivId);
+	        		
+	        		tabHeaders.append(tabHeader);
+	        		tabContents.append(tabContent);
+	        		
+	        		i++;
+	        	}
+	        	tabHeaders.append("</ul>\n");
+	        	if(tabbedContent && !ajaxRequest)
+	        	{
+	        		resultContent.append("<div id='tabs'>\n");
+	            	resultContent.append(tabHeaders);
+	            	resultContent.append(tabContents);
+	            	resultContent.append("</div>\n");
+
+	            	resultContent.append("\n").append("<script>\n").append("$(function() {\n").append("$( \"#tabs\" ).tabs();\n").append("});\n").append("</script>\n");
+	        	}
+	        	else
+	        	{
+	        		resultContent.append(tabContents);
+	        	}
+	        	
+	        	String pageNavigationScriptFunction = getPageNavigationScriptFunction(queryDefinition);
+	        	resultContent.append(pageNavigationScriptFunction);
+	        	resultContent.append(getExecuteSelectedSqlScript());
+	        	
+	        }
+	        
+	        resultContent.append("<div id='dbqueryDialogContainer'></div>");
+	        
+	        re.setContent(resultContent.toString());
+	        re.setOnlyShowContent(ajaxRequest);
+	        return re;
 		}
 		
 	}
