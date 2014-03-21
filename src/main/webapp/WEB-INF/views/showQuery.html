@@ -22,53 +22,6 @@
 			<pre>${queryExecuteExceptionString}</pre>
 				
 		</div>
-		<script type="text/javascript">
-			$(document).delegate(".dbQueryViewLOb", "click", function() {
-				
-			});
-			function showDBLobSql(command)
-			{
-				var tag = $("#dbqueryDialogContainer").html("sql：<textarea rows='14' cols='60' name='sqlCode'></textarea>");
-				tag.dialog({
-				      modal: true, title: '参数删除', zIndex: 10000, autoOpen: true,
-				      width: 'auto', resizable: true,
-				      buttons: [
-				      		{
-								text:"确认",
-								click:function(){
-									var toSubmitData={};
-									var url=$(location).attr('pathname');
-									$.post(url,
-											toSubmitData,
-											function(json){
-												if(json.success && json.success===true)
-												{
-													tag.html(json.data.html);
-													showQueryDefinition(queryId,$("#showQueryEditContainer"));
-												}
-												else
-												{
-													tag.append(json.msg);
-												}	
-											},
-											'json'
-									);
-									
-									$(this).dialog("close"); 
-								} 
-							},
-				      		{
-								text:"取消",
-								click:function(){
-									$(this).dialog("close"); 
-								} 
-							}
-				      ]
-				      
-				});
-				
-			}
-		</script>
 	</body>
 </html>
 

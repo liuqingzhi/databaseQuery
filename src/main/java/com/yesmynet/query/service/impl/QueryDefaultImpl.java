@@ -360,6 +360,57 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     	return re;
     	
     }
+    private String getLobDownloadScript()
+    {
+    	StringBuilder re=new StringBuilder();
+    	re.append("<script type=\"text/javascript\">\n");
+    			re.append("			$(document).delegate(\".clobViewButton\", \"click\", function() {\n");
+    			re.append("				showDBLobSql();\n");
+    			re.append("			});\n");
+    			re.append("			$(document).delegate(\".blobViewButton\", \"click\", function() {\n");
+    			re.append("				showDBLobSql();\n");
+    			re.append("			});\n");
+    			re.append("			\n");
+    			re.append("			function showDBLobSql(command)\n");
+    			re.append("			{\n");
+    			re.append("				var formStr=\"<form id='lobDownloadForm' target='_blank'>\"+\n");
+    			re.append("							\"<input type='hidden' name='SystemQueryId' value='dqQuery'>\"+\n");
+    			re.append("							\"<input type='hidden' name='command' value='streamLobQuery'>\"+\n");
+    			re.append("							\"<input type='hidden' name='dbId'>\"+\n");
+    			re.append("							\"sql：<textarea rows='14' cols='60' name='sqlCode'></textarea>\"+\n");
+    			re.append("							\"</form>\"\n");
+    			re.append("				\n");
+    			re.append("				var tag = $(\"#dbqueryDialogContainer\").html(formStr);\n");
+    			re.append("				tag.dialog({\n");
+    			re.append("				      modal: true, title: '参数删除', zIndex: 10000, autoOpen: true,\n");
+    			re.append("				      width: 'auto', resizable: true,\n");
+    			re.append("				      buttons: [\n");
+    			re.append("				      		{\n");
+    			re.append("								text:\"确认\",\n");
+    			re.append("								click:function(){\n");
+    			re.append("									//var toSubmitData={'SystemQueryId':'dqQuery','command':'streamLobQuery','dbId':'','sqlCode':''};\n");
+    			re.append("									var url=$(location).attr('pathname');\n");
+    			re.append("									$('#lobDownloadForm').attr(\"action\",url);\n");
+    			re.append("									$(\"#lobDownloadForm input[name='dbId']\").val($(\"#queryForm [name='dbId']\").val());\n");
+    			re.append("									$('#lobDownloadForm').submit();\n");
+    			re.append("									\n");
+    			re.append("									$(this).dialog(\"close\");\n"); 
+    			re.append("								} \n");
+    			re.append("							},\n");
+    			re.append("				      		{\n");
+    			re.append("								text:\"取消\",\n");
+    			re.append("								click:function(){\n");
+    			re.append("									$(this).dialog(\"close\");\n"); 
+    			re.append("								} \n");
+    			re.append("							}\n");
+    			re.append("				      ]\n");
+    			re.append("				      \n");
+    			re.append("				});\n");
+    			re.append("				\n");
+    			re.append("			}\n");
+    			re.append("		</script>\n");
+    	return re.toString();
+    }
     /**
      * 得到tab选项卡的头，用来点击这个头可以显示tab页的内容。
      * @param sql 执行的SQL
@@ -635,13 +686,13 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
                     {
                         strCurrentColumnTypeName=rsmd.getColumnTypeName(i);
                         if (strCurrentColumnTypeName.equalsIgnoreCase("blob"))
-                            strCurrentColumnValue="&lt;Blob&gt;";
+                            strCurrentColumnValue="<a class='blobViewButton'>&lt;Blob&gt;</a>";
                         else if (strCurrentColumnTypeName.equalsIgnoreCase("clob"))
-                            strCurrentColumnValue="&lt;Clob&gt; <br><input type='button' value='查看' class='dbQueryViewLOb'><input type='button' value='另存为' class='dbQueryDownloadLOb'>";
+                            strCurrentColumnValue="<a class='clobViewButton'>&lt;Clob&gt;</a>";
                         else if (strCurrentColumnTypeName.equalsIgnoreCase("text"))
-                            strCurrentColumnValue="&lt;Text&gt;";
+                            strCurrentColumnValue="<a class='clobViewButton'>&lt;Text&gt;</a>";
                         else if (strCurrentColumnTypeName.equalsIgnoreCase("image"))
-                            strCurrentColumnValue="&lt;Image&gt;";
+                            strCurrentColumnValue="<a class='blobViewButton'>&lt;Image&gt;</a>";
                         else
                             strCurrentColumnValue=rs.getString(i);
                             
@@ -933,7 +984,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 	        	String pageNavigationScriptFunction = getPageNavigationScriptFunction(queryDefinition);
 	        	resultContent.append(pageNavigationScriptFunction);
 	        	resultContent.append(getExecuteSelectedSqlScript());
-	        	
+	        	resultContent.append(getLobDownloadScript());
 	        }
 	        
 	        resultContent.append("<div id='dbqueryDialogContainer'></div>");
