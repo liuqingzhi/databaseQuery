@@ -111,13 +111,6 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		
 		return re;
 	}
-	@Override
-	public void runResultStream(OutputStream outputStream, ResultStream resultStream,QueryDefinition queryDefinition) 
-	{
-		Environment environment = getEnvironment();
-		ResourceHolder resourceHolder = getResourceHolder(environment.getUser());
-		resultStream.write(outputStream, queryDefinition, resourceHolder, environment);
-	}
 	/**
 	 * 从数据库得到查询的配置
 	 * @param queryId

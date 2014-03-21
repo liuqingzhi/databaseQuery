@@ -9,23 +9,9 @@ import com.yesmynet.query.core.service.ResourceHolder;
  * @author zhi_liu
  *
  */
-public interface ResultStream {
-	/**
-	 * 得到流的字节数
-	 * @return
-	 */
-	public long getLength();
-	/**
-	 * 下载的文件的保存名称 
-	 * @return
-	 */
+public interface  ResultStream {
+	public void write(OutputStream outputStream);
+	public Long getLength();
 	public String getFileName();
-	/**
-	 * 以流的方式输出内容
-	 * @param outputStream
-	 * @param queryDefinition
-	 * @param resourceHolder
-	 * @param environment
-	 */
-	public void write(OutputStream outputStream,QueryDefinition queryDefinition,ResourceHolder resourceHolder,Environment environment);
+	public String getContentType();
 }

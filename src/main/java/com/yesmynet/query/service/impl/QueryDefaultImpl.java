@@ -1,13 +1,18 @@
 package com.yesmynet.query.service.impl;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
+import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -45,6 +50,7 @@ import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.dto.ResultStream;
 import com.yesmynet.query.core.dto.SelectOption;
+import com.yesmynet.query.core.exception.ServiceException;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.ResourceHolder;
@@ -945,8 +951,8 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 	private class StreamLobQuery implements QueryService
 	{
 		@Override
-		public QueryResult doInQuery(QueryDefinition queryDefinition,
-				ResourceHolder resourceHolder, Environment environment) {
+		public QueryResult doInQuery(final QueryDefinition queryDefinition,
+				final ResourceHolder resourceHolder, final Environment environment) {
 			QueryResult re=new QueryResult();
 			
 			List<Parameter> parameters = queryDefinition.getParameters();
@@ -957,64 +963,103 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 	        
 	        //dbId="derbyDataSourceId";
 			final InfoDTO<DataSourceConfig> dataSourceConfigInfoDTO = getDataSourceConfig(dbId,resourceHolder);
+			DataSourceConfig dataSource = dataSourceConfigInfoDTO.getData();
+			final JdbcTemplate jdbcTemplate=new JdbcTemplate(dataSource.getDatasource());
+			
 			ResultStream stream=new ResultStream(){
 				
+				private final String encode="UTF-8";
+				//private QueryDefinition queryDefinition1=queryDefinition;
+				//private ResourceHolder resourceHolder1=resourceHolder;
+				//private Environment environment1=environment;
+				
 				@Override
-				public long getLength() {
-					
-					DataSourceConfig dataSource = dataSourceConfigInfoDTO.getData();
-					JdbcTemplate jdbcTemplate=new JdbcTemplate(dataSource.getDatasource());
-					Long length = jdbcTemplate.execute(new StatementCallback<Long>(){
+				public void write(final OutputStream outputStream) {
+					jdbcTemplate.execute(new StatementCallback<Void>(){
+						@Override
+						public Void doInStatement(Statement stmt)
+								throws SQLException, DataAccessException {
+							
+							try {
+								ResultSet resultSet = stmt.executeQuery(sql);
+								if(resultSet.next())
+								{
+									ResultSetMetaData metaData = resultSet.getMetaData();
+									String columnTypeName = metaData.getColumnTypeName(1);
+									 if (columnTypeName.equalsIgnoreCase("blob") || columnTypeName.equalsIgnoreCase("image"))
+									 {
+										 Blob blob = resultSet.getBlob(1);
+										 InputStream binaryStream = blob.getBinaryStream();
+										 IOUtils.copy(binaryStream, outputStream);
+									 }
+									 else if(columnTypeName.equalsIgnoreCase("clob") || columnTypeName.equalsIgnoreCase("text"))
+									 {
+										 Clob clob = resultSet.getClob(1);
+										 Reader characterStream = clob.getCharacterStream();
+										 IOUtils.copy(characterStream, outputStream,encode);
+									 }
+									 else
+									 {
+										 throw new ServiceException("不是Blob或Clob字段");
+									 }
+									
+								}
+							} catch (IOException e) {
+								throw new ServiceException("写stream流出错了",e);
+							}
+							return null;
+						}});
+				}
+
+				@Override
+				public Long getLength() {
+					Long execute = jdbcTemplate.execute(new StatementCallback<Long>(){
 						@Override
 						public Long doInStatement(Statement stmt)
 								throws SQLException, DataAccessException {
-							ResultSet resultSet = stmt.executeQuery(sql);
-							long length=0;
-							if(resultSet.next())
-							{
-								Clob clob = resultSet.getClob(1);
-								length=clob.length();
+							Long re=null;
+							try {
+								ResultSet resultSet = stmt.executeQuery(sql);
+								if(resultSet.next())
+								{
+									ResultSetMetaData metaData = resultSet.getMetaData();
+									String columnTypeName = metaData.getColumnTypeName(1);
+									 if (columnTypeName.equalsIgnoreCase("blob") || columnTypeName.equalsIgnoreCase("image"))
+									 {
+										 Blob blob = resultSet.getBlob(1);
+										 re=blob.length();
+									 }
+									 else if(columnTypeName.equalsIgnoreCase("clob") || columnTypeName.equalsIgnoreCase("text"))
+									 {
+									 }
+									 else
+									 {
+										 throw new ServiceException("不是Blob或Clob字段");
+									 }
+								}
+							} catch (Exception e) {
+								throw new ServiceException("写stream流出错了",e);
 							}
-							return length;
+							return re;
 						}});
 					
-					return length;
+					
+					return execute;
 				}
 
 				@Override
 				public String getFileName() {
-					return "test";
+					return "test1";
 				}
 
 				@Override
-				public void write(final OutputStream outputStream,
-						QueryDefinition queryDefinition,
-						ResourceHolder resourceHolder, Environment environment) {
-					
-					DataSourceConfig dataSource = dataSourceConfigInfoDTO.getData();
-					JdbcTemplate jdbcTemplate=new JdbcTemplate(dataSource.getDatasource());
-					jdbcTemplate.execute(new StatementCallback<Void>(){
-
-						@Override
-						public Void doInStatement(Statement stmt)
-								throws SQLException, DataAccessException {
-							ResultSet resultSet = stmt.executeQuery(sql);
-							if(resultSet.next())
-							{
-								Clob clob = resultSet.getClob(1);
-								InputStream asciiStream = clob.getAsciiStream();
-								try {
-									IOUtils.copy(asciiStream, outputStream);
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
-							
-							return null;
-						}});
-				}};
+				public String getContentType() {
+					return null;
+				}
 				
-				re.setResultStream(stream);
+			};
+				
+			re.setResultStream(stream);
 			
 			return re;
 		}

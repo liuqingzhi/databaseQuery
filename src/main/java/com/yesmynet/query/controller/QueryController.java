@@ -69,13 +69,23 @@ public class QueryController {
         {
         	if(queryResult.getResultStream()!=null)
             {	
-        		ResultStream resultStream = queryResult.getResultStream();
-        		response.setHeader("Content-Type","");
-        		response.setHeader("Content-Length", resultStream.getLength()+"");
-        		response.setHeader("Content-Disposition", "inline; filename=\"" + resultStream.getFileName() + "\"");
-
-        		ServletOutputStream outputStream = response.getOutputStream();
-        		queryRunService.runResultStream(outputStream, queryResult.getResultStream(), queryDefinition);
+        		try {
+					ResultStream resultStream = queryResult.getResultStream();
+					ServletOutputStream outputStream = response.getOutputStream();
+					Long length = resultStream.getLength();
+					
+					response.setHeader("Content-Type","");
+					if(length!=null)
+						response.setHeader("Content-Length", resultStream.getLength()+"");
+					response.setHeader("Content-Disposition", "inline; filename=\"" + resultStream.getFileName() + "\"");
+					resultStream.write(outputStream);
+				} catch (Exception e) {
+					logger.error("输出流出错了",e);
+					String printException = printException(e);
+					model.addAttribute("errorMsg", "输出流出错了:{}"+printException);
+					return "streamError";
+				}
+        		
         		return null;
             }
         	else if(queryResult.getOnlyShowContent()!=null && queryResult.getOnlyShowContent())
