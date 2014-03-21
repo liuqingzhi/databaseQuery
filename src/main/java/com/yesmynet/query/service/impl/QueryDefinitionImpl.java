@@ -12,6 +12,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
@@ -47,6 +49,7 @@ import com.yesmynet.query.utils.QueryUtils;
  *
  */
 public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
+	private Logger logger=LoggerFactory.getLogger(getClass());
 	/**
 	 * 用于生成gson字符串的对象
 	 */
@@ -522,12 +525,11 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				
 				datas.put("html", content);
 				
-			} catch (ServiceException e) {
-				infoDTO.setSuccess(false);
-				infoDTO.setMsg("保存查询定义失败");//有时e.getMessage()中有方括号，导致json出错
 			}
 			catch(Exception e)
 			{
+				logger.error("保存查询定义失败",e);
+				
 				infoDTO.setSuccess(false);
 				infoDTO.setMsg("保存查询定义失败，系统错误");
 			}
