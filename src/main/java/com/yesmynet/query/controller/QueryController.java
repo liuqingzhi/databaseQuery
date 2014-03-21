@@ -1,6 +1,7 @@
 package com.yesmynet.query.controller;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -8,6 +9,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,8 +84,10 @@ public class QueryController {
 				} catch (Exception e) {
 					logger.error("输出流出错了",e);
 					String printException = printException(e);
-					model.addAttribute("errorMsg", "输出流出错了:{}"+printException);
-					return "streamError";
+					
+					writeResponseStream("输出流出错了:<pre>"+printException+"</pre>",response);
+					
+					return null;
 				}
         		
         		return null;
@@ -106,6 +110,29 @@ public class QueryController {
 	    
 		return viewName;
     }
+	/**
+	 * 向response中写入一些内容，因为response如果调用过response.getOutputStream();方法后
+	 * 就不能直接输出内容了，要输出只能使用流的方式写入。
+	 * @param content
+	 * @param response
+	 */
+	private void writeResponseStream(String content,HttpServletResponse response)
+	{
+		try {
+			final String encode="UTF-8";
+			int length = content.getBytes().length;
+			
+			response.setHeader("Content-Type","text/html");
+			response.setHeader("Content-Length", length+"");
+			ServletOutputStream outputStream = response.getOutputStream();
+			StringReader stringReader = new StringReader(content);
+			
+			IOUtils.copy(stringReader, outputStream,encode);
+			
+		} catch (Exception e) {
+			logger.error("在流输出时出错，显示出错信息也出错",e);
+		}
+	}
 	/**
 	 * 把httpRequest中请求的参数值设置到查询的参数中
 	 * @param queryParameters
