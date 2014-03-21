@@ -944,7 +944,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 		}
 	}
 	/**
-	 * 表示空的查询
+	 * 表示输出流，如，查看clb字段，blob下载等。
 	 * @author liuqingzhi
 	 *
 	 */
@@ -960,8 +960,6 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 	        final Boolean ajaxRequest=StringUtils.hasText(QueryUtils.getParameterValue(parameters,ParameterName.AjaxRequest.getParameter().getParameterInput().getName()));
 	        String dbId = QueryUtils.getParameterValue(parameters,ParameterName.DbId.getParameter().getParameterInput().getName());
 	        
-	        
-	        //dbId="derbyDataSourceId";
 			final InfoDTO<DataSourceConfig> dataSourceConfigInfoDTO = getDataSourceConfig(dbId,resourceHolder);
 			DataSourceConfig dataSource = dataSourceConfigInfoDTO.getData();
 			final JdbcTemplate jdbcTemplate=new JdbcTemplate(dataSource.getDatasource());
@@ -969,9 +967,6 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 			ResultStream stream=new ResultStream(){
 				
 				private final String encode="UTF-8";
-				//private QueryDefinition queryDefinition1=queryDefinition;
-				//private ResourceHolder resourceHolder1=resourceHolder;
-				//private Environment environment1=environment;
 				
 				@Override
 				public void write(final OutputStream outputStream) {
@@ -1031,6 +1026,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 									 }
 									 else if(columnTypeName.equalsIgnoreCase("clob") || columnTypeName.equalsIgnoreCase("text"))
 									 {
+										 //clob的clob.length()方法得到的字符数，不是字节数，所以，现在还没法得到clob的字节数。 
 									 }
 									 else
 									 {
@@ -1042,7 +1038,6 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 							}
 							return re;
 						}});
-					
 					
 					return execute;
 				}
