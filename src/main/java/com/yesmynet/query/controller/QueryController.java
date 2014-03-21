@@ -74,7 +74,7 @@ public class QueryController {
 					ServletOutputStream outputStream = response.getOutputStream();
 					Long length = resultStream.getLength();
 					
-					response.setHeader("Content-Type","");
+					response.setHeader("Content-Type","application/force-download");
 					if(length!=null)
 						response.setHeader("Content-Length", resultStream.getLength()+"");
 					response.setHeader("Content-Disposition", "inline; filename=\"" + resultStream.getFileName() + "\"");
