@@ -171,6 +171,7 @@ public class ParameterInput extends BaseDto
         case TextArea:
         case InputHidden:
         case Button:
+        case File:
         	String inputValue=getValue();
         	if(ParameterHtmlType.Button.equals(htmlType2))
         	{

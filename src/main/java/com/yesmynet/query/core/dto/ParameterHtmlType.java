@@ -36,7 +36,11 @@ public  enum ParameterHtmlType
 	/**
 	 * 按钮Button
 	 */
-	Button("按钮",true,"<input type=''button'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {4}/>\n")
+	Button("按钮",true,"<input type=''button'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {4}/>\n"),
+	/**
+	 * 文件上传
+	 */
+	File("文件上传",true,"<input type=''file'' name=''{1}'' value=''{0}'' style=''{2}'' class=''{3}'' {4}/>\n")
     ;
 	/**
 	 * 显示在界面上的类型名称

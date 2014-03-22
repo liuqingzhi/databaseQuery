@@ -123,7 +123,7 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 	private QueryService getQueryInstanceFromGroovyCode(String queryId,String javaCode)
 	{
 		QueryService myObject=null;
-        javaCode="package com.yesmynet.database.query."+ queryId +";"+javaCode;
+        javaCode="package com.yesmynet.database.query.packaged"+ queryId +";"+javaCode;
         
         try
         {

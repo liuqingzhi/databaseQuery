@@ -21,6 +21,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.yesmynet.query.core.dto.Parameter;
+import com.yesmynet.query.core.dto.ParameterHtmlType;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.dto.ResultStream;
@@ -104,12 +105,34 @@ public class QueryController {
         }
 	    String queryHtml = queryRenderService.getQueryHtml(queryDefinition);
 	    
+	    model.addAttribute("formEnctype", getFormEnctype(queryDefinition));
 		model.addAttribute("queryHtml", queryHtml);
 		model.addAttribute("queryResult", queryResult);
 		model.addAttribute("queryExecuteExceptionString", queryExecuteExceptionString);
 	    
 		return viewName;
     }
+	private String getFormEnctype(QueryDefinition queryDefinition)
+	{
+		 String re="";
+		 List<Parameter> parameters = queryDefinition.getParameters();
+		 boolean hasFileParameter=false;
+		 if(!CollectionUtils.isEmpty(parameters))
+		 {
+			 for(Parameter p:parameters)
+			 {
+				 if(ParameterHtmlType.File.equals(p.getParameterInput().getHtmlType()))
+				 {
+					 hasFileParameter=true;
+					 break;
+				 }
+			 }
+		 }
+		 
+		 if(hasFileParameter)
+			 re="enctype=\"multipart/form-data\"";
+		 return re;
+	}
 	/**
 	 * 向response中写入一些内容，因为response如果调用过response.getOutputStream();方法后
 	 * 就不能直接输出内容了，要输出只能使用流的方式写入。
