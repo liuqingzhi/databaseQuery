@@ -132,6 +132,25 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		}
     }
     /**
+     * 构造函数
+     */
+    public QueryDefinitionImpl() {
+		super();
+		//初始化配置
+		commandQueryMap=new HashMap<String,QueryService>();
+		commandQueryMap.put("queryDefinitionGetter", new QueryDefinitionGetter());
+		commandQueryMap.put("queryDefinitionSave", new QueryDefinitionSave());
+		commandQueryMap.put("queryParameterSave", new QueryParameterSave());
+		commandQueryMap.put("queryParameterGetter", new QueryParameterGetter());
+		commandQueryMap.put("queryParameterDeleter", new QueryParameterDeleter());
+		commandQueryMap.put("queryDefinitionAjaxGetter", new QueryDefinitionAjaxGetter());
+		
+		commandQueryMap.put("templateGetter", new TemplateGetter());
+		commandQueryMap.put("templateSave", new TemplateSave());
+		commandQueryMap.put("templateDeleter", new TemplateDeleter());
+		
+	}
+    /**
      * 把参数的数据库查询映射为一个对象
      */
     private RowMapper<Parameter> parameterRowMapper=new RowMapper<Parameter>() {
@@ -182,25 +201,6 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 			return re;
 		}
 	};
-    /**
-     * 构造函数
-     */
-    public QueryDefinitionImpl() {
-		super();
-		//初始化配置
-		commandQueryMap=new HashMap<String,QueryService>();
-		commandQueryMap.put("queryDefinitionGetter", new QueryDefinitionGetter());
-		commandQueryMap.put("queryDefinitionSave", new QueryDefinitionSave());
-		commandQueryMap.put("queryParameterSave", new QueryParameterSave());
-		commandQueryMap.put("queryParameterGetter", new QueryParameterGetter());
-		commandQueryMap.put("queryParameterDeleter", new QueryParameterDeleter());
-		commandQueryMap.put("queryDefinitionAjaxGetter", new QueryDefinitionAjaxGetter());
-		
-		commandQueryMap.put("templateGetter", new TemplateGetter());
-		commandQueryMap.put("templateSave", new TemplateSave());
-		commandQueryMap.put("templateDeleter", new TemplateDeleter());
-		
-	}
 	/**
      * 得到操作系统数据库的jdbcTemplate
      * @param resourceHolder
