@@ -35,8 +35,8 @@ CREATE TABLE m_sys_query_parameter
 CREATE TABLE m_sys_query_template
 	(ID INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT m_sys_query_parameter_PK PRIMARY KEY,
 	query_id int,/*查询的ID，对应了m_sys_query.id*/
-	code VARCHAR(200),/*代码*/
-	title VARCHAR(200),/*名称*/
+	name VARCHAR(200),/*模板名称*/
+	title VARCHAR(200),/*模板显示名称*/
 	content CLOB,/*模板的内容*/
 	last_update_time TIMESTAMP/*上次更新时间*/
 	)
@@ -96,6 +96,11 @@ import org.springframework.util.CollectionUtils;
 import com.yesmynet.query.core.dto.ParameterHtmlType;
 import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.utils.QueryUtils;
+import com.yesmynet.query.core.dto.ResultTemplate;
+import java.util.Map;
+import java.util.HashMap;
+import com.yesmynet.query.utils.FreemarkerUtils;
+
 
 public class Test1  implements  QueryService
 {
@@ -104,8 +109,12 @@ public class Test1  implements  QueryService
 		QueryResult re=new QueryResult();
 		
 		settingOptions(queryDefinition);
-		re.setContent("这是一个数据库中配置的groovy代码的测试，你可以通过如下地址查看本查询的在数据库中的设置<a href=\"query.do?SystemQueryId=queryDefinition&id=1\" target=\"_blank\">编辑本查询</a><br><br>得到的所有参数如下：<br>"+showAllParams(queryDefinition));
-		
+
+		String content="这是一个数据库中配置的groovy代码的测试，你可以通过如下地址查看本查询的在数据库中的设置<a href=\"query.do?SystemQueryId=queryDefinition&id=1\" target=\"_blank\">编辑本查询</a><br><br>得到的所有参数如下：<br>"+showAllParams(queryDefinition);
+		content+=getResultByFreemarker(queryDefinition);
+
+		re.setContent(content);		
+
 		return re;
 	}
 	private String showAllParams(QueryDefinition queryDefinition)
@@ -132,33 +141,54 @@ public class Test1  implements  QueryService
 	 * @param queryDefinition
 	 */
 	private void settingOptions(QueryDefinition queryDefinition)
+	{
+		List<Parameter> parameters = queryDefinition.getParameters();
+		Parameter parameterByName = QueryUtils.getParameterByName(parameters, "param2");
+		if(parameterByName!=null && ParameterHtmlType.Select.equals(parameterByName.getParameterInput().getHtmlType()))
 		{
-			List<Parameter> parameters = queryDefinition.getParameters();
-			Parameter parameterByName = QueryUtils.getParameterByName(parameters, "param2");
-			if(parameterByName!=null && ParameterHtmlType.Select.equals(parameterByName.getParameterInput().getHtmlType()))
-			{
-				List<SelectOption> optionValues=new ArrayList<SelectOption>();
-				
-				SelectOption optEmpty=new SelectOption();
-				optEmpty.setText("");
-				optEmpty.setValue("");
-				optionValues.add(optEmpty);
-				
-				SelectOption opt1=new SelectOption();
-				opt1.setText("选项1");
-				opt1.setValue("opt1Value");
-				optionValues.add(opt1);
-				
-				SelectOption opt2=new SelectOption();
-				opt2.setText("选项2");
-				opt2.setValue("opt2Value");
-				optionValues.add(opt2);
-				
-				parameterByName.getParameterInput().setOptionValues(optionValues);
-			}
+			List<SelectOption> optionValues=new ArrayList<SelectOption>();
+			
+			SelectOption optEmpty=new SelectOption();
+			optEmpty.setText("");
+			optEmpty.setValue("");
+			optionValues.add(optEmpty);
+			
+			SelectOption opt1=new SelectOption();
+			opt1.setText("选项1");
+			opt1.setValue("opt1Value");
+			optionValues.add(opt1);
+			
+			SelectOption opt2=new SelectOption();
+			opt2.setText("选项2");
+			opt2.setValue("opt2Value");
+			optionValues.add(opt2);
+			
+			parameterByName.getParameterInput().setOptionValues(optionValues);
 		}
+	}
+	/**
+	 * 测试使用freemarker模板显示查询结果
+	 * @param queryDefinition
+	 * @return
+	 */
+	private String getResultByFreemarker(QueryDefinition queryDefinition)
+	{
+		List<ResultTemplate> templates = queryDefinition.getTemplates();
+		ResultTemplate template = QueryUtils.getTemplateByName(templates, "template1");
+		Map<String,Object> datas=new HashMap<String,Object>();
+		
+		datas.put("now", new Date());
+		
+		return FreemarkerUtils.renderTemplateByContent(template.getContent(),datas);
+	}
+
 }
 ');
 insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (1,'参数1','参数1的描述','InputText','param1','color:red;','class1',0,1,'onclick=''alert("你点击了本输入框");''',CURRENT_TIMESTAMP);
 insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (1,'参数2','参数2的描述','Select','param2','color:green;','class2',0,1,'',CURRENT_TIMESTAMP);
 insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (1,'确定','参数3的描述','Button','param3','color:black;','class3',0,1,'onclick=''$("#queryForm").submit();''',CURRENT_TIMESTAMP);
+
+insert into m_sys_query_template (query_id,name,title,content,last_update_time) values (1,'template1','模板1','这是使用freemarker模板生成的内容，当前日期和时间是${now?string(''yyyy-MM-dd HH:mm:ss'')}',CURRENT_TIMESTAMP);
+insert into m_sys_query_template (query_id,name,title,content,last_update_time) values (1,'template2','模板2','一个查询可以有多个模板，在运行时，你可以得到所有模板，你来决定用哪个或哪几个模板。',CURRENT_TIMESTAMP);
+
+

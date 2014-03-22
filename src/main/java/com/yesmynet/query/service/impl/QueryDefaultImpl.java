@@ -16,6 +16,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import com.yesmynet.query.core.dto.ParameterLayoutDTO;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.dto.ResultStream;
+import com.yesmynet.query.core.dto.ResultTemplate;
 import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.exception.ServiceException;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
@@ -56,6 +58,7 @@ import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.ResourceHolder;
 import com.yesmynet.query.http.dto.SystemParameterName;
 import com.yesmynet.query.service.DatabseDialectService;
+import com.yesmynet.query.utils.FreemarkerUtils;
 import com.yesmynet.query.utils.QueryUtils;
 import com.yesmynet.query.utils.SqlSplitUtils;
 import com.yesmynet.query.utils.dto.SqlDto;
@@ -887,7 +890,23 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re=new QueryResult();
+			
 			return re;
+		}
+		/**
+		 * 测试使用freemarker模板显示查询结果
+		 * @param queryDefinition
+		 * @return
+		 */
+		private String getResultByFreemarker(QueryDefinition queryDefinition)
+		{
+			List<ResultTemplate> templates = queryDefinition.getTemplates();
+			ResultTemplate template = QueryUtils.getTemplateByName(templates, "template1");
+			Map<String,Object> datas=new HashMap<String,Object>();
+			
+			datas.put("now", new Date());
+			
+			return FreemarkerUtils.renderTemplateByContent(template.getContent(),datas);
 		}
 	}
 	/**

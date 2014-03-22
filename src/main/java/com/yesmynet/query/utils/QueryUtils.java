@@ -13,6 +13,7 @@ import com.google.gson.reflect.TypeToken;
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.ParameterInput;
 import com.yesmynet.query.core.dto.QueryDefinition;
+import com.yesmynet.query.core.dto.ResultTemplate;
 
 public class QueryUtils {
 	private static Gson gson = new GsonBuilder().serializeNulls().create();
@@ -55,6 +56,29 @@ public class QueryUtils {
     		{
     			String name = p.getParameterInput().getName();
     			if(parameterName.equals(name)) 
+    			{
+    				re=p;
+    				break;
+    			}
+    		}
+    	}
+    	return re;
+    }
+    /**
+     * 根据名称得到用于显示结果的模板
+     * @param templates
+     * @param templateName
+     * @return
+     */
+    public static ResultTemplate getTemplateByName(List<ResultTemplate> templates,String templateName)
+    {
+    	ResultTemplate re=null;
+    	if(StringUtils.hasText(templateName) && CollectionUtils.isNotEmpty(templates))
+    	{
+    		for(ResultTemplate p :templates)
+    		{
+    			String name = p.getName();
+    			if(templateName.equals(name)) 
     			{
     				re=p;
     				break;

@@ -31,7 +31,7 @@
 	<resultMap id="resultTemplateResult" class="com.yesmynet.query.core.dto.ResultTemplate">
         <result property="queryDefinition.id"  column="query_id"/>
         <result property="id"  column="id"/>
-        <result property="code"  column="code"/>
+        <result property="name"  column="name"/>
         <result property="title"  column="title"/>
         <result property="content"  column="content"/>
     </resultMap>

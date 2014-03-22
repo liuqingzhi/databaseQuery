@@ -17,7 +17,7 @@ public class ResultTemplate extends BaseDto {
 	/**
 	 * 模板的代码
 	 */
-	private String code;
+	private String name;
 	/**
 	 * 模板的显示名称
 	 */
@@ -32,11 +32,11 @@ public class ResultTemplate extends BaseDto {
 	public void setQueryDefinition(QueryDefinition queryDefinition) {
 		this.queryDefinition = queryDefinition;
 	}
-	public String getCode() {
-		return code;
+	public String getName() {
+		return name;
 	}
-	public void setCode(String code) {
-		this.code = code;
+	public void setName(String name) {
+		this.name = name;
 	}
 	public String getTitle() {
 		return title;

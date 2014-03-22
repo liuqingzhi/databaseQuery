@@ -91,7 +91,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	
     	TemplateId("模板的Id","id","",ParameterHtmlType.InputHidden,"","","",false),
     	TemplateQueryId("模板的查询的Id","queryDefinition.id","",ParameterHtmlType.InputHidden,"","","",false),
-    	TemplateCode("模板代码","code","",ParameterHtmlType.InputHidden,"","","",false),
+    	TemplateName("模板名称","name","",ParameterHtmlType.InputHidden,"","","",false),
     	TemplateTitle("模板标题","title","",ParameterHtmlType.InputHidden,"","","",false),
     	TemplateContent("模板内容","content","",ParameterHtmlType.InputHidden,"","","",false),
     	ToDeleteTemplateId("要删除的模板的Id","ToDeleteTemplateId","",ParameterHtmlType.InputHidden,"","","",false),
@@ -195,7 +195,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 	       
 			queryDefinition.setId(rs.getString("query_id"));
 	        re.setId(rs.getString("id"));
-	        re.setCode(rs.getString("code"));
+	        re.setName(rs.getString("name"));
 	        re.setTitle(rs.getString("title"));
 	        re.setContent(rs.getString("content"));
 			return re;
@@ -860,11 +860,11 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				String sql="";
 				if(StringUtils.hasText(id))
 				{
-					sql="update m_sys_query_template set code=?,title=?,content=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
+					sql="update m_sys_query_template set name=?,title=?,content=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
 					jdbcTemplate.update(sql, new PreparedStatementSetter(){
 						@Override
 						public void setValues(PreparedStatement ps) throws SQLException {
-							ps.setString(1, template.getCode());
+							ps.setString(1, template.getName());
 							ps.setString(2, template.getTitle());
 							ps.setString(3, template.getContent());
 							ps.setString(4, template.getId());
@@ -878,10 +878,10 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 					    new PreparedStatementCreator() {
 					        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
 					            PreparedStatement ps =
-					                connection.prepareStatement("insert into m_sys_query_template (query_id,code,title,content,last_update_time) values (?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
+					                connection.prepareStatement("insert into m_sys_query_template (query_id,name,title,content,last_update_time) values (?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
 
 					            ps.setString(1, template.getQueryDefinition().getId());
-								ps.setString(2, template.getCode());
+								ps.setString(2, template.getName());
 								ps.setString(3, template.getTitle());
 								ps.setString(4, template.getContent());
 								
