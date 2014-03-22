@@ -986,8 +986,11 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 	        	resultContent.append(getExecuteSelectedSqlScript());
 	        	resultContent.append(getLobDownloadScript());
 	        }
-	        
-	        resultContent.append("<div id='dbqueryDialogContainer'></div>");
+	        if(!ajaxRequest)
+	        {
+	        	//如果是ajax请求就不能输出这个用来显示dialog的容器，那会导致显示多个dialog
+	        	resultContent.append("<div id='dbqueryDialogContainer'></div>");
+	        }
 	        
 	        re.setContent(resultContent.toString());
 	        re.setOnlyShowContent(ajaxRequest);
