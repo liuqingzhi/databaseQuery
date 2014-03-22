@@ -82,3 +82,83 @@ insert into  m_sys_user_role (USER_ID,ROLE_ID) values (1,1);
 insert into  m_sys_user_role (USER_ID,ROLE_ID) values (1,2);
 insert into  m_sys_user_role (USER_ID,ROLE_ID) values (2,2);
 
+/*生成测试查询*/
+insert into m_sys_query (name,description,after_Parameter_Html,java_code) values ('测试查询','初始化生成的测试查询','','
+import com.yesmynet.query.core.dto.Environment;
+import com.yesmynet.query.core.dto.QueryDefinition;
+import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.service.QueryService;
+import com.yesmynet.query.core.service.ResourceHolder;
+import java.lang.StringBuilder;
+import java.util.List;
+import com.yesmynet.query.core.dto.Parameter;
+import org.springframework.util.CollectionUtils;
+import com.yesmynet.query.core.dto.ParameterHtmlType;
+import com.yesmynet.query.core.dto.SelectOption;
+import com.yesmynet.query.utils.QueryUtils;
+
+public class Test1  implements  QueryService
+{
+	public QueryResult doInQuery(QueryDefinition queryDefinition,
+			ResourceHolder resourceHolder, Environment environment) {
+		QueryResult re=new QueryResult();
+		
+		settingOptions(queryDefinition);
+		re.setContent("这是一个数据库中配置的groovy代码的测试，你可以通过如下地址查看本查询的在数据库中的设置<a href=\"query.do?SystemQueryId=queryDefinition&id=1\" target=\"_blank\">编辑本查询</a><br><br>得到的所有参数如下：<br>"+showAllParams(queryDefinition));
+		
+		return re;
+	}
+	private String showAllParams(QueryDefinition queryDefinition)
+	{
+		StringBuilder sb=new StringBuilder();
+		List<Parameter> parameters = queryDefinition.getParameters();
+		if(!CollectionUtils.isEmpty(parameters))
+		{
+			for(Parameter p:parameters)
+			{
+				String value = p.getParameterInput().getValue();
+				sb.append("参数名称:");
+				sb.append(p.getParameterInput().getName());
+				sb.append("，参数值：");
+				sb.append(p.getParameterInput().getValue());
+				sb.append("<br>");
+				
+			}
+		}
+		return sb.toString();
+	}
+	/**
+	 * 设置参数的选项，这里可以根据数据库资源来生成所有选项
+	 * @param queryDefinition
+	 */
+	private void settingOptions(QueryDefinition queryDefinition)
+		{
+			List<Parameter> parameters = queryDefinition.getParameters();
+			Parameter parameterByName = QueryUtils.getParameterByName(parameters, "param2");
+			if(parameterByName!=null && ParameterHtmlType.Select.equals(parameterByName.getParameterInput().getHtmlType()))
+			{
+				List<SelectOption> optionValues=new ArrayList<SelectOption>();
+				
+				SelectOption optEmpty=new SelectOption();
+				optEmpty.setText("");
+				optEmpty.setValue("");
+				optionValues.add(optEmpty);
+				
+				SelectOption opt1=new SelectOption();
+				opt1.setText("选项1");
+				opt1.setValue("opt1Value");
+				optionValues.add(opt1);
+				
+				SelectOption opt2=new SelectOption();
+				opt2.setText("选项2");
+				opt2.setValue("opt2Value");
+				optionValues.add(opt2);
+				
+				parameterByName.getParameterInput().setOptionValues(optionValues);
+			}
+		}
+}
+');
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (1,'参数1','参数1的描述','InputText','param1','color:red;','class1',0,1,'onclick=''alert("你点击了本输入框");''',CURRENT_TIMESTAMP);
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (1,'参数2','参数2的描述','Select','param2','color:green;','class2',0,1,'',CURRENT_TIMESTAMP);
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (1,'确定','参数3的描述','Button','param3','color:black;','class3',0,1,'onclick=''$("#queryForm").submit();''',CURRENT_TIMESTAMP);
