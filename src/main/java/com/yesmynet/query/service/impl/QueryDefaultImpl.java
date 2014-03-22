@@ -746,15 +746,15 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
      */
     private enum ParameterName
     {
-    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",false,null,null,null),
-    	ExecuteButton("查询按钮","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\"#queryForm\").submit();'",false,30,1,1),
+    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",true,null,null,null),
+    	ExecuteButton("查询按钮","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\"#queryForm\").submit();'",true,30,1,1),
     	
-    	SQL("SQL脚本","sqlCode","",ParameterHtmlType.TextArea,"width:1000px; height:200px;","","",false,10,1,2),
-    	PageSize("每页显示的记录数","pageSize","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
-    	CurrentPage("当前页码","currentPage","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
-    	AjaxRequest("是否为ajax请求","ajaxRequest","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
-    	SelectedSql("选中的sql","selectedSql","",ParameterHtmlType.InputHidden,null,null,null,false,null,null,null),
-    	DbId("数据库","dbId","",ParameterHtmlType.Select,null,null,null,false,20,1,1),
+    	SQL("SQL脚本","sqlCode","",ParameterHtmlType.TextArea,"width:1000px; height:200px;","","",true,10,1,2),
+    	PageSize("每页显示的记录数","pageSize","",ParameterHtmlType.InputHidden,null,null,null,true,null,null,null),
+    	CurrentPage("当前页码","currentPage","",ParameterHtmlType.InputHidden,null,null,null,true,null,null,null),
+    	AjaxRequest("是否为ajax请求","ajaxRequest","",ParameterHtmlType.InputHidden,null,null,null,true,null,null,null),
+    	SelectedSql("选中的sql","selectedSql","",ParameterHtmlType.InputHidden,null,null,null,true,null,null,null),
+    	DbId("数据库","dbId","",ParameterHtmlType.Select,null,null,null,true,20,1,1),
     	
     	;
     	private Parameter parameter;
@@ -781,7 +781,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     		input.setStyle(style);
     		input.setStyleClass(styleClass);
     		input.setElementHtml(elementHtml);
-    		input.setNotShow(notShow);
+    		input.setShow(notShow);
     		
     		parameterLayoutDTO.setSort(sort);
     		parameterLayoutDTO.setRowSpan(rowSpan);

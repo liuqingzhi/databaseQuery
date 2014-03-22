@@ -115,7 +115,7 @@ public class FormLayoutService implements ParameterLayoutService {
 		{
 			for(Parameter param:parameters)
 			{
-				if(param.getParameterInput().getNotShow()==null || !param.getParameterInput().getNotShow())
+				if(param.getParameterInput().getShow()!=null && param.getParameterInput().getShow())
 				{
 					ParameterHtmlType htmlType = param.getParameterInput().getHtmlType();
 					if(ParameterHtmlType.InputHidden.equals(htmlType))

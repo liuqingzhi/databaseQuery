@@ -68,33 +68,33 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     private Map<String,QueryService> commandQueryMap;
     private enum ParameterName
     {
-    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",true),
+    	Command("是执行的命令","command","",ParameterHtmlType.InputHidden,"","","",false),
     	
-    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","","",true),
-    	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",true),
-    	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",true),
+    	QueryDefinitionId("查询的Id","id","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryDefinitionName("查询的名称","name","",ParameterHtmlType.InputText,"","","",false),
+    	QueryDefinitionDescription("查询描述","description","",ParameterHtmlType.InputText,"","","",false),
+    	QueryDefinitionJavaCode("查询代码","javaCode","",ParameterHtmlType.TextArea,"","","",false),
     	
-    	QueryParameterQueryId("参数的查询的Id","queryDefinition.id","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterId("参数的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterTitle("参数标题","parameterInput.title","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterDescription("参数描述","parameterInput.description","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterHtmlType("参数类型","parameterInput.htmlType","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterName("参数名称","parameterInput.name","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterStyle("参数css","parameterInput.style","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterStyleClass("参数css class","parameterInput.styleClass","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterOptionGetterKey("直接Html","parameterInput.elementHtml","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterElementHtml("不显示本参数","parameterInput.notShow","",ParameterHtmlType.InputHidden,"","","",true),
-    	QueryParameterEraseValue("不回显参数值","parameterInput.eraseValue","",ParameterHtmlType.InputHidden,"","","",true),
-    	ToDeleteParameterId("要删除的参数的Id","toDeleteParameterId","",ParameterHtmlType.InputHidden,"","","",true),
+    	QueryParameterQueryId("参数的查询的Id","queryDefinition.id","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterId("参数的Id","id","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterTitle("参数标题","parameterInput.title","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterDescription("参数描述","parameterInput.description","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterHtmlType("参数类型","parameterInput.htmlType","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterName("参数名称","parameterInput.name","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterStyle("参数css","parameterInput.style","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterStyleClass("参数css class","parameterInput.styleClass","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterElementHtml("直接Html","parameterInput.elementHtml","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterShow("不显示本参数","parameterInput.show","",ParameterHtmlType.InputHidden,"","","",false),
+    	QueryParameterEraseValue("不回显参数值","parameterInput.eraseValue","",ParameterHtmlType.InputHidden,"","","",false),
+    	ToDeleteParameterId("要删除的参数的Id","toDeleteParameterId","",ParameterHtmlType.InputHidden,"","","",false),
     	
     	
-    	TemplateId("模板的Id","id","",ParameterHtmlType.InputHidden,"","","",true),
-    	TemplateQueryId("模板的查询的Id","queryDefinition.id","",ParameterHtmlType.InputHidden,"","","",true),
-    	TemplateCode("模板代码","code","",ParameterHtmlType.InputHidden,"","","",true),
-    	TemplateTitle("模板标题","title","",ParameterHtmlType.InputHidden,"","","",true),
-    	TemplateContent("模板内容","content","",ParameterHtmlType.InputHidden,"","","",true),
-    	ToDeleteTemplateId("要删除的模板的Id","ToDeleteTemplateId","",ParameterHtmlType.InputHidden,"","","",true),
+    	TemplateId("模板的Id","id","",ParameterHtmlType.InputHidden,"","","",false),
+    	TemplateQueryId("模板的查询的Id","queryDefinition.id","",ParameterHtmlType.InputHidden,"","","",false),
+    	TemplateCode("模板代码","code","",ParameterHtmlType.InputHidden,"","","",false),
+    	TemplateTitle("模板标题","title","",ParameterHtmlType.InputHidden,"","","",false),
+    	TemplateContent("模板内容","content","",ParameterHtmlType.InputHidden,"","","",false),
+    	ToDeleteTemplateId("要删除的模板的Id","ToDeleteTemplateId","",ParameterHtmlType.InputHidden,"","","",false),
     	
     	
     	
@@ -123,7 +123,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     		input.setStyle(style);
     		input.setStyleClass(styleClass);
     		input.setElementHtml(elementHtml);
-    		input.setNotShow(notShow);
+    		input.setShow(notShow);
     		
     		parameter.setParameterInput(input);
     	}
@@ -156,7 +156,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 	        input.setStyle(rs.getString("style"));
 	        input.setStyleClass(rs.getString("style_class"));
 			input.setEraseValue(rs.getInt("erase_value")==1?true:false);
-			input.setNotShow(rs.getInt("not_show")==1?true:false);
+			input.setShow(rs.getInt("show")==1?true:false);
 			input.setElementHtml(rs.getString("element_html"));
 			return re;
 		}
@@ -628,7 +628,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				{
 					final int queryId=Integer.parseInt(id);
 							
-					sql="update m_sys_query_parameter set title=?,description=?,html_Type=?,name=?,style=?,style_class=?,erase_value=?,not_show=?,element_html=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
+					sql="update m_sys_query_parameter set title=?,description=?,html_Type=?,name=?,style=?,style_class=?,erase_value=?,show=?,element_html=?,last_update_time=CURRENT_TIMESTAMP where id=? and query_id=?";
 					jdbcTemplate.update(sql, new PreparedStatementSetter(){
 						@Override
 						public void setValues(PreparedStatement ps) throws SQLException {
@@ -639,7 +639,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 							ps.setString(5, parameter.getParameterInput().getStyle());
 							ps.setString(6, parameter.getParameterInput().getStyleClass());
 							ps.setInt(7,(parameter.getParameterInput().getEraseValue()!=null && parameter.getParameterInput().getEraseValue())?1:0);
-							ps.setInt(8, (parameter.getParameterInput().getNotShow()!=null && parameter.getParameterInput().getNotShow())?1:0);
+							ps.setInt(8, (parameter.getParameterInput().getShow()!=null && parameter.getParameterInput().getShow())?1:0);
 							ps.setString(9, parameter.getParameterInput().getElementHtml());
 							ps.setString(10, parameter.getId());
 							ps.setString(11, parameter.getQueryDefinition().getId());
@@ -653,7 +653,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 					    new PreparedStatementCreator() {
 					        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
 					            PreparedStatement ps =
-					                connection.prepareStatement("insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,not_show,element_html,last_update_time) values (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
+					                connection.prepareStatement("insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)", new String[] {"ID"});/*这个自动生成键的字段的名称一定要大写，不然会报错*/
 
 					            ps.setString(1, parameter.getQueryDefinition().getId());
 								ps.setString(2, parameter.getParameterInput().getTitle());
@@ -663,7 +663,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 								ps.setString(6, parameter.getParameterInput().getStyle());
 								ps.setString(7, parameter.getParameterInput().getStyleClass());
 								ps.setInt(8, (parameter.getParameterInput().getEraseValue()!=null && parameter.getParameterInput().getEraseValue())?1:0);
-								ps.setInt(9, (parameter.getParameterInput().getNotShow()!=null && parameter.getParameterInput().getNotShow())?1:0);
+								ps.setInt(9, (parameter.getParameterInput().getShow()!=null && parameter.getParameterInput().getShow())?1:0);
 								ps.setString(10, parameter.getParameterInput().getElementHtml());
 								
 								return ps;

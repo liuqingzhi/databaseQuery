@@ -19,8 +19,8 @@
 					<option value="${opt.value}" <#if (parameter.parameterInput.eraseValue)?exists && parameter.parameterInput.eraseValue?string("1","0")==opt.value>selected</#if>>${opt.text}</option>
 				</#list>
 			</select><br>
-	直接写在input元素中的html片断： <input type="text" name="parameterInput.elementHtml" value="${(parameter.parameterInput.elementHtml)!""}"><br>
-	不在页面上显参数值：<select name="parameterInput.notShow">
+	直接写在input元素中的html片断： <br><textarea rows="3" cols="60" name="parameterInput.elementHtml">${(parameter.parameterInput.elementHtml)!""}</textarea><br>
+	显示参数：<select name="parameterInput.show">
 				<#list yesOrNoOptions as opt>
 					<option value="${opt.value}" <#if (parameter.parameterInput.notShow)?exists && parameter.parameterInput.notShow?string("1","0")==opt.value>selected</#if>>${opt.text}</option>
 				</#list><br>
