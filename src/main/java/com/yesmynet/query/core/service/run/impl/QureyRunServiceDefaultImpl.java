@@ -31,7 +31,6 @@ import com.yesmynet.query.core.dto.User;
 import com.yesmynet.query.core.exception.ServiceException;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
-import com.yesmynet.query.core.service.QueryShowListner;
 import com.yesmynet.query.core.service.ResourceHolder;
 import com.yesmynet.query.core.service.run.QueryRunService;
 
@@ -78,11 +77,6 @@ public class QureyRunServiceDefaultImpl extends SqlMapClientDaoSupport implement
 		}
 		ResourceHolder resourceHolder = getResourceHolder(environment.getUser());
 		//settingParameterOptions(re,resourceHolder,environment);
-		if(queryService instanceof QueryShowListner)
-		{
-			QueryShowListner listner=(QueryShowListner)queryService;
-			listner.beforeShow(resourceHolder, environment);
-		}
 		return re;
 	}
 	@Override
