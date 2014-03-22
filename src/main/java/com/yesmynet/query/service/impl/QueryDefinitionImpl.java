@@ -812,9 +812,9 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 				infoDTO.setSuccess(true);
 				infoDTO.setMsg("得到模板成功");
 				
-				if(StringUtils.hasText(queryId))
+				if(StringUtils.hasText(templateId))
 				{
-					queryDefinitionInDB=getTemplateById(queryId,resourceHolder);
+					queryDefinitionInDB=getTemplateById(templateId,resourceHolder);
 				}
 				String content = showTemplate(queryDefinitionInDB,queryDefinition);
 				datas.put("html", content);

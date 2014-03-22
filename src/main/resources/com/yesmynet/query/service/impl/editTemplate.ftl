@@ -4,7 +4,7 @@
 	<input type="hidden" name="queryDefinition.id" value="${(resultTemplate.queryDefinition.id)!""}">
 	<input type="hidden" name="id" value="${(resultTemplate.id)!""}">
 	
-	模板代码：<input type="text" name="code" value="${(resultTemplate.code)!""}"><br>
+	模板名称：<input type="text" name="name" value="${(resultTemplate.name)!""}"><br>
 	模板标题：<input type="text" name="title" value="${(resultTemplate.title)!""}"><br>
 	模板内容：<br><textarea rows="14" cols="60" name="content">${(resultTemplate.content)!""}</textarea>
 </form>		
