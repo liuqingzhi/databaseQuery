@@ -290,7 +290,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     	re.append("				  type: \"POST\",\n");
     	re.append("				  url: url,\n");
     	re.append("				  dataType:\"html\",\n");
-    	re.append("				  data: { \"").append(SystemParameterName.QueryId.getParamerName()).append("\":queryId,\"").append(ParameterName.DbId.getParameter().getParameterInput().getName()).append("\":dbId,\"command\":\"pageExeute\",\"ajaxRequest\":\"1\",\"SystemDataSourceId\": datasourceId, \"sqlCode\": sql,\"currentPage\":targetPageNum },\n");
+    	re.append("				  data: { \"").append(SystemParameterName.QueryId.getParamerName()).append("\":queryId,\"").append(ParameterName.DbId.getParameter().getParameterInput().getName()).append("\":dbId,\"command\":\"\",\"ajaxRequest\":\"1\",\"SystemDataSourceId\": datasourceId, \"sqlCode\": sql,\"currentPage\":targetPageNum },\n");
     	re.append("				  beforeSend:function() {\n");
     	re.append("				  	var ajaxtipImage =$( \"#ajaxtipImage\" );\n");
     	re.append("				  	var ajaxtip=$( \"#ajaxtip\" );\n");
