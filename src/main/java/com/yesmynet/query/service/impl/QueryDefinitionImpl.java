@@ -100,7 +100,14 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	
     	//ExecuteButton("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\\\"#queryForm\\\").submit();'",true),
     	;
-    	private Parameter parameter;
+    	private String title;
+    	private String name;
+    	private String description;
+    	private ParameterHtmlType htmlType;
+    	private String style;
+    	private String styleClass;
+    	private String elementHtml;
+    	private Boolean notShow;
     	/**
     	 * 构造函数
     	 * @param title 参数标题
@@ -113,7 +120,17 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     	 */
     	private ParameterName(String title,String name,String description,ParameterHtmlType htmlType,String style,String styleClass,String elementHtml,Boolean notShow)
     	{
-    		parameter=new Parameter();
+    		this.title=title;
+    		this.name=name;
+    		this.description=description;
+    		this.htmlType=htmlType;
+    		this.style=style;
+    		this.styleClass=styleClass;
+    		this.elementHtml=elementHtml;
+    		this.notShow=notShow;	
+    	}
+		public Parameter getParameter() {
+			Parameter parameter=new Parameter();
     		ParameterInput input=new ParameterInput();
     		
     		input.setTitle(title);
@@ -126,10 +143,33 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
     		input.setShow(notShow);
     		
     		parameter.setParameterInput(input);
-    	}
-		public Parameter getParameter() {
 			return parameter;
 		}
+		public String getTitle() {
+			return title;
+		}
+		public String getName() {
+			return name;
+		}
+		public String getDescription() {
+			return description;
+		}
+		public ParameterHtmlType getHtmlType() {
+			return htmlType;
+		}
+		public String getStyle() {
+			return style;
+		}
+		public String getStyleClass() {
+			return styleClass;
+		}
+		public String getElementHtml() {
+			return elementHtml;
+		}
+		public Boolean getNotShow() {
+			return notShow;
+		}
+		
     }
     /**
      * 构造函数
@@ -364,10 +404,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 	}
     @Override
 	public QueryDefinition getQueryDefinition() {
-		if(this.queryDefinition==null)
-    	{
-    		this.queryDefinition=initQueryDefinition();
-    	}
+    	this.queryDefinition=initQueryDefinition();
         return this.queryDefinition;
 	}
 	@Override
@@ -719,8 +756,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
 				Environment environment) {
 			
-			String parameterId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.ToDeleteParameterId.parameter.getParameterInput().getName());
-			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.parameter.getParameterInput().getName());
+			String parameterId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.ToDeleteParameterId.getName());
+			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getName());
 			QueryResult re =new QueryResult();
 			JdbcTemplate jdbcTemplate=null;
 			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
@@ -761,7 +798,7 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
 				Environment environment) {
 			
-			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.parameter.getParameterInput().getName());
+			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getName());
 			QueryResult re =new QueryResult();
 			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
 			Map<String,Object> datas=new HashMap<String,Object>();
@@ -801,8 +838,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
 				Environment environment) {
 			
-			String templateId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.TemplateId.parameter.getParameterInput().getName());
-			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.TemplateQueryId.parameter.getParameterInput().getName());
+			String templateId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.TemplateId.getName());
+			String queryId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.TemplateQueryId.getName());
 			QueryResult re =new QueryResult();
 			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();
 			Map<String,Object> datas=new HashMap<String,Object>();
@@ -936,8 +973,8 @@ public class QueryDefinitionImpl implements QueryService,QueryDefinitionGetter{
 		public QueryResult doInQuery(QueryDefinition queryDefinition, ResourceHolder resourceHolder,
 				Environment environment) {
 			
-			String templateId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.ToDeleteTemplateId.parameter.getParameterInput().getName());
-			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.parameter.getParameterInput().getName());
+			String templateId = QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.ToDeleteTemplateId.getName());
+			String queryId= QueryUtils.getParameterValue(queryDefinition.getParameters(), ParameterName.QueryDefinitionId.getName());
 			QueryResult re =new QueryResult();
 			JdbcTemplate jdbcTemplate=null;
 			InfoDTO<Map<String,Object>> infoDTO=new InfoDTO<Map<String,Object>>();

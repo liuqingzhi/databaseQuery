@@ -167,6 +167,7 @@ public class QueryController {
 	 */
 	private void setHttpParameterValue(QueryDefinition queryParameters,HttpServletRequest request)
 	{
+		//ParameterDataBinder binder=new ParameterDataBinder();
 		binder.bind(queryParameters, request);
 	}
 	/**

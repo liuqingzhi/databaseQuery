@@ -67,6 +67,12 @@ public class ParameterDataBinder {
 							p.getParameterInput().setValues(parameterValues);
 						}
 					}
+					else
+					{
+						//request中没有这个参数，则设置为null
+						p.getParameterInput().setValues(null);
+						p.getParameterInput().setUploadedFile(null);
+					}
 				}
 			}
 		}

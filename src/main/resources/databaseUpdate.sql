@@ -192,3 +192,275 @@ insert into m_sys_query_template (query_id,name,title,content,last_update_time) 
 insert into m_sys_query_template (query_id,name,title,content,last_update_time) values (1,'template2','模板2','一个查询可以有多个模板，在运行时，你可以得到所有模板，你来决定用哪个或哪几个模板。',CURRENT_TIMESTAMP);
 
 
+
+/*生成测试查询*/
+insert into m_sys_query (name,description,after_Parameter_Html,java_code) values ('测试文件上传的查询','初始化生成的测试文件上传的查询','','
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.yesmynet.query.core.dto.DataSourceConfig;
+import com.yesmynet.query.core.dto.Environment;
+import com.yesmynet.query.core.dto.Parameter;
+import com.yesmynet.query.core.dto.QueryDefinition;
+import com.yesmynet.query.core.dto.QueryResult;
+import com.yesmynet.query.core.dto.SelectOption;
+import com.yesmynet.query.core.exception.ServiceException;
+import com.yesmynet.query.core.service.QueryService;
+import com.yesmynet.query.core.service.ResourceHolder;
+import com.yesmynet.query.utils.QueryUtils;
+
+
+public class TestFileUploadQuer implements QueryService
+{
+	Map<String,QueryService> commandQueryMap=new HashMap<String,QueryService>();
+	
+	
+	public TestFileUploadQuer() {
+		super();
+		commandQueryMap.put("initDB", new InitDBQuery());
+		commandQueryMap.put("uploadFile", new UploadFileQuery());
+	}
+	@Override
+	public QueryResult doInQuery(QueryDefinition queryDefinition,
+			ResourceHolder resourceHolder, Environment environment) {
+		QueryResult re=new QueryResult();
+		List<Parameter> parameters = queryDefinition.getParameters();
+		String command = QueryUtils.getParameterValue(parameters, "command");
+		
+		settingParameterOptions(queryDefinition,resourceHolder);
+		if(StringUtils.hasText(command))
+		{
+			QueryService queryService = commandQueryMap.get(command);
+			if(queryService!=null)
+			{
+				re=queryService.doInQuery(queryDefinition, resourceHolder, environment);
+			}
+			else
+			{
+				re.setContent("不支持的操作，请换个命令");
+			}	
+		}
+		
+		return re;
+	}
+	/**
+	 * 设置下拉框的选项
+	 * @param queryDefinition
+	 */
+	private void settingParameterOptions(QueryDefinition queryDefinition,ResourceHolder resourceHolder)
+	{
+		List<Parameter> parameters = queryDefinition.getParameters();
+		Parameter command = QueryUtils.getParameterByName(parameters, "command");
+		Parameter db = QueryUtils.getParameterByName(parameters, "saveToWhichDB");
+		
+		List<SelectOption> options=new ArrayList<SelectOption>();
+		command.getParameterInput().setOptionValues(options);
+		
+		SelectOption opt1=new SelectOption();
+		opt1.setValue("initDB");
+		opt1.setText("初始化数据库表");
+		options.add(opt1);
+		
+		SelectOption opt2=new SelectOption();
+		opt2.setValue("uploadFile");
+		opt2.setText("上传文件");
+		options.add(opt2);
+		
+		List<SelectOption> dbOptions = getDBOptions(resourceHolder.getDataSourceConfigs(),true);
+		db.getParameterInput().setOptionValues(dbOptions);
+	}
+	/**
+	 * 得到要显示的所有数据库
+	 * @param dbs
+	 * @param generateAnEmptyOption
+	 * @return
+	 */
+	private List<SelectOption> getDBOptions(List<DataSourceConfig> dbs,boolean generateAnEmptyOption)
+	{
+		List<SelectOption> re=new ArrayList<SelectOption>();
+		if(generateAnEmptyOption)
+		{
+			SelectOption option=new SelectOption();
+			option.setValue("");
+			option.setText("");
+			re.add(option);
+		}
+		
+		if(!CollectionUtils.isEmpty(dbs))
+		{
+			for(DataSourceConfig db:dbs)
+			{
+				SelectOption option=new SelectOption();
+				option.setValue(db.getId());
+				option.setText(db.getName());
+				re.add(option);
+			}
+		}
+		
+		return re;
+	}
+	/**
+	 * 得到要操作的数据库的JdbcTemplate
+	 * @param queryDefinition
+	 * @param resourceHolder
+	 * @return
+	 */
+	private JdbcTemplate getJdbcTemplate(QueryDefinition queryDefinition,ResourceHolder resourceHolder)
+	{
+		String dbId = QueryUtils.getParameterValue(queryDefinition.getParameters(), "saveToWhichDB");
+		JdbcTemplate jdbcTemplate = getJdbcTemplate(dbId,resourceHolder);
+		return jdbcTemplate;
+	}
+	/**
+	 * 根据数据库ID得到指定的数据库的JdbcTemplate
+	 * @param dbId
+	 * @param resourceHolder
+	 * @return
+	 */
+	private JdbcTemplate getJdbcTemplate(String dbId,ResourceHolder resourceHolder)
+	{
+		JdbcTemplate re=null;
+		DataSource dataSource=null;
+		List<DataSourceConfig> dataSourceConfigs = resourceHolder.getDataSourceConfigs();
+		if(!CollectionUtils.isEmpty(dataSourceConfigs))
+		{
+			for(DataSourceConfig db:dataSourceConfigs)
+			{
+				if(dbId.equals(db.getId()))
+				{
+					dataSource=db.getDatasource();
+					break;
+				}
+			}
+		}
+		if(dataSource!=null)
+			re=new JdbcTemplate(dataSource);
+		else
+		{
+			throw new ServiceException("您没有权限操作该数据库");
+		}
+		return re;
+	}
+	private class InitDBQuery implements QueryService
+	{
+
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			initDBSchema(queryDefinition,resourceHolder);
+			QueryResult re=new QueryResult();
+			
+			re.setContent("初始化数据库表成功");
+			return re;
+		}
+		/**
+		 * 初始化数据库表
+		 */
+		private void initDBSchema(QueryDefinition queryDefinition,ResourceHolder resourceHolder)
+		{
+			JdbcTemplate jdbcTemplate = getJdbcTemplate(queryDefinition,resourceHolder);
+			String sql="create table test_file_upload\n"+
+						"(\n"+
+						"  file_title  VARCHAR2(100),\n"+
+						"  content_data  BLOB, \n"+
+						"  update_time   date\n"+
+						")";
+			jdbcTemplate.execute(sql);
+		}
+	}
+	/**
+	 * 上传文件
+	 * @author liuqingzhi
+	 *
+	 */
+	private class UploadFileQuery implements QueryService
+	{
+		@Override
+		public QueryResult doInQuery(QueryDefinition queryDefinition,
+				ResourceHolder resourceHolder, Environment environment) {
+			QueryResult re=new QueryResult();
+			try {
+				List<Parameter> parameters = queryDefinition.getParameters();
+				JdbcTemplate jdbcTemplate = getJdbcTemplate(queryDefinition,resourceHolder);
+				
+				final String fileTitle = QueryUtils.getParameterValue(parameters, "uploadfileTitle");
+				Parameter file = QueryUtils.getParameterByName(parameters, "uploadfile");
+				
+				if(file.getParameterInput().getUploadedFile()!=null)
+				{
+					final MultipartFile uploadedFile = file.getParameterInput().getUploadedFile();
+					writeUploadedFileToLocalFile(uploadedFile);
+					
+					String sql="insert into test_file_upload (file_title,content_data) values (?,null)";
+					//jdbcTemplate.update(sql, fileTitle,uploadedFile.getInputStream());
+					jdbcTemplate.update(sql, new PreparedStatementSetter(){
+
+						@Override
+						public void setValues(PreparedStatement ps)
+								throws SQLException {
+							try {
+								ps.setString(1, fileTitle);
+								//ps.setBinaryStream(2, uploadedFile.getInputStream(),uploadedFile.getSize());
+								//ps.setBlob(2, uploadedFile.getInputStream());
+								
+							} catch (Exception e) {
+								throw new RuntimeException("把文件写入数据库出错",e);
+							}
+						}});
+					
+					re.setContent("文件上传成功");
+				}
+				else
+				{	
+					re.setContent("您没有上传文件，请选择您要上传的文件");
+				}
+			} catch (Exception e) {
+				re.setContent("处理上传的文件出错了");
+				re.setException(e);
+			} 
+			return re;
+		}
+		
+	}
+	/**
+	 * 把上传的文件写到本地的一个文件中
+	 * @param uploadedFile
+	 */
+	private void writeUploadedFileToLocalFile(MultipartFile uploadedFile)
+	{
+		try {
+			FileOutputStream file = new FileOutputStream ("d:\\test\\"+uploadedFile.getOriginalFilename());
+			InputStream inputStream = uploadedFile.getInputStream();
+			
+			IOUtils.copy(inputStream, file);
+			
+			file.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+
+');
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (2,'文件标题','表示文件标题','InputText','uploadfileTitle','','',0,1,'',CURRENT_TIMESTAMP);
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (2,'要上传的文件','请选择要上传的文件','File','uploadfile','','',0,1,'',CURRENT_TIMESTAMP);
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (2,'选择数据库','把上传的文件存储在哪个数据库中','Select','saveToWhichDB','','',0,1,'',CURRENT_TIMESTAMP);
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (2,'要执行的操作','选择要执行的操作','Select','command','','',0,1,'',CURRENT_TIMESTAMP);
+insert into m_sys_query_parameter (query_id,title,description,html_Type,name,style,style_class,erase_value,show,element_html,last_update_time) values (2,'确定','确定上传文件','Button','ok','color:black;','class3',0,1,'onclick=''$("#queryForm").submit();''',CURRENT_TIMESTAMP);
