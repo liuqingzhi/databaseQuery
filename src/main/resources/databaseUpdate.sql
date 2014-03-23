@@ -195,7 +195,6 @@ insert into m_sys_query_template (query_id,name,title,content,last_update_time) 
 
 /*生成第2个测试查询*/
 insert into m_sys_query (name,description,after_Parameter_Html,java_code) values ('测试文件上传的查询','初始化生成的测试文件上传的查询','','
-
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
@@ -425,8 +424,9 @@ public class TestFileUploadQuer implements QueryService
 								throws SQLException {
 							try {
 								ps.setString(1, fileTitle);
-								//ps.setBinaryStream(2, uploadedFile.getInputStream(),uploadedFile.getSize());
-								ps.setBlob(2, uploadedFile.getInputStream());//oracle还是有问题，这一行代码出错
+								int streamSize = (int)uploadedFile.getSize();
+								ps.setBinaryStream(2, uploadedFile.getInputStream(),streamSize);
+								//ps.setBlob(2, uploadedFile.getInputStream(),streamSize);
 								
 							} catch (Throwable e) {
 								throw new RuntimeException("把文件写入数据库出错",e);
@@ -440,7 +440,7 @@ public class TestFileUploadQuer implements QueryService
 					re.setContent("您没有上传文件，请选择您要上传的文件");
 				}
 			} catch (Exception e) {
-				re.setContent("处理上传的文件出错了，你是不是选择了oralce数据库，现在我还不清楚怎么操作oracle数据库的blob字段，你选择derby数据库试试。");
+				re.setContent("处理上传的文件出错了");
 				re.setException(e);
 			} 
 			return re;
