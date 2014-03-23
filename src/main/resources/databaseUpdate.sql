@@ -82,7 +82,7 @@ insert into  m_sys_user_role (USER_ID,ROLE_ID) values (1,1);
 insert into  m_sys_user_role (USER_ID,ROLE_ID) values (1,2);
 insert into  m_sys_user_role (USER_ID,ROLE_ID) values (2,2);
 
-/*生成测试查询*/
+/*生成第1个测试查询*/
 insert into m_sys_query (name,description,after_Parameter_Html,java_code) values ('测试查询','初始化生成的测试查询','','
 import com.yesmynet.query.core.dto.Environment;
 import com.yesmynet.query.core.dto.QueryDefinition;
@@ -193,10 +193,10 @@ insert into m_sys_query_template (query_id,name,title,content,last_update_time) 
 
 
 
-/*生成测试查询*/
+/*生成第2个测试查询*/
 insert into m_sys_query (name,description,after_Parameter_Html,java_code) values ('测试文件上传的查询','初始化生成的测试文件上传的查询','','
+
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -205,17 +205,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.yesmynet.query.core.dto.DataSourceConfig;
+import com.yesmynet.query.core.dto.DatabaseDialect;
 import com.yesmynet.query.core.dto.Environment;
 import com.yesmynet.query.core.dto.Parameter;
 import com.yesmynet.query.core.dto.QueryDefinition;
@@ -245,6 +244,7 @@ public class TestFileUploadQuer implements QueryService
 		String command = QueryUtils.getParameterValue(parameters, "command");
 		
 		settingParameterOptions(queryDefinition,resourceHolder);
+		
 		if(StringUtils.hasText(command))
 		{
 			QueryService queryService = commandQueryMap.get(command);
@@ -324,9 +324,18 @@ public class TestFileUploadQuer implements QueryService
 	 */
 	private JdbcTemplate getJdbcTemplate(QueryDefinition queryDefinition,ResourceHolder resourceHolder)
 	{
+		JdbcTemplate re=null;
 		String dbId = QueryUtils.getParameterValue(queryDefinition.getParameters(), "saveToWhichDB");
-		JdbcTemplate jdbcTemplate = getJdbcTemplate(dbId,resourceHolder);
-		return jdbcTemplate;
+		DataSourceConfig dataSourceConfig = getDatabaseConfig(dbId,resourceHolder);
+		if(dataSourceConfig!=null)
+		{
+			re=new JdbcTemplate(dataSourceConfig.getDatasource());
+		}
+		else
+		{
+			throw new ServiceException("没有得到指定的数据库");
+		}
+		return re;
 	}
 	/**
 	 * 根据数据库ID得到指定的数据库的JdbcTemplate
@@ -334,10 +343,9 @@ public class TestFileUploadQuer implements QueryService
 	 * @param resourceHolder
 	 * @return
 	 */
-	private JdbcTemplate getJdbcTemplate(String dbId,ResourceHolder resourceHolder)
+	private DataSourceConfig getDatabaseConfig(String dbId,ResourceHolder resourceHolder)
 	{
-		JdbcTemplate re=null;
-		DataSource dataSource=null;
+		DataSourceConfig re=null;
 		List<DataSourceConfig> dataSourceConfigs = resourceHolder.getDataSourceConfigs();
 		if(!CollectionUtils.isEmpty(dataSourceConfigs))
 		{
@@ -345,16 +353,10 @@ public class TestFileUploadQuer implements QueryService
 			{
 				if(dbId.equals(db.getId()))
 				{
-					dataSource=db.getDatasource();
+					re=db;
 					break;
 				}
 			}
-		}
-		if(dataSource!=null)
-			re=new JdbcTemplate(dataSource);
-		else
-		{
-			throw new ServiceException("您没有权限操作该数据库");
 		}
 		return re;
 	}
@@ -364,25 +366,31 @@ public class TestFileUploadQuer implements QueryService
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment) {
-			initDBSchema(queryDefinition,resourceHolder);
 			QueryResult re=new QueryResult();
 			
-			re.setContent("初始化数据库表成功");
-			return re;
-		}
-		/**
-		 * 初始化数据库表
-		 */
-		private void initDBSchema(QueryDefinition queryDefinition,ResourceHolder resourceHolder)
-		{
-			JdbcTemplate jdbcTemplate = getJdbcTemplate(queryDefinition,resourceHolder);
-			String sql="create table test_file_upload\n"+
+			String dbId = QueryUtils.getParameterValue(queryDefinition.getParameters(), "saveToWhichDB");
+			DataSourceConfig dataSourceConfig = getDatabaseConfig(dbId,resourceHolder);
+			
+			DatabaseDialect databaseDialect = dataSourceConfig.getDatabaseDialect();
+			String sql="";
+			if(DatabaseDialect.Oracle.equals(databaseDialect))
+			{
+				sql="create table test_file_upload\n"+
 						"(\n"+
 						"  file_title  VARCHAR2(100),\n"+
 						"  content_data  BLOB, \n"+
 						"  update_time   date\n"+
 						")";
+			}
+			else if(DatabaseDialect.Derby.equals(databaseDialect))
+			{
+				sql="CREATE TABLE test_file_upload (file_title  VARCHAR(100), content_data BLOB)";
+			}
+			JdbcTemplate jdbcTemplate=new JdbcTemplate(dataSourceConfig.getDatasource());
 			jdbcTemplate.execute(sql);
+			
+			re.setContent("初始化数据库表成功");
+			return re;
 		}
 	}
 	/**
@@ -408,7 +416,7 @@ public class TestFileUploadQuer implements QueryService
 					final MultipartFile uploadedFile = file.getParameterInput().getUploadedFile();
 					writeUploadedFileToLocalFile(uploadedFile);
 					
-					String sql="insert into test_file_upload (file_title,content_data) values (?,null)";
+					String sql="insert into test_file_upload (file_title,content_data) values (?,?)";
 					//jdbcTemplate.update(sql, fileTitle,uploadedFile.getInputStream());
 					jdbcTemplate.update(sql, new PreparedStatementSetter(){
 
@@ -418,9 +426,9 @@ public class TestFileUploadQuer implements QueryService
 							try {
 								ps.setString(1, fileTitle);
 								//ps.setBinaryStream(2, uploadedFile.getInputStream(),uploadedFile.getSize());
-								//ps.setBlob(2, uploadedFile.getInputStream());
+								ps.setBlob(2, uploadedFile.getInputStream());//oracle还是有问题，这一行代码出错
 								
-							} catch (Exception e) {
+							} catch (Throwable e) {
 								throw new RuntimeException("把文件写入数据库出错",e);
 							}
 						}});
@@ -432,7 +440,7 @@ public class TestFileUploadQuer implements QueryService
 					re.setContent("您没有上传文件，请选择您要上传的文件");
 				}
 			} catch (Exception e) {
-				re.setContent("处理上传的文件出错了");
+				re.setContent("处理上传的文件出错了，你是不是选择了oralce数据库，现在我还不清楚怎么操作oracle数据库的blob字段，你选择derby数据库试试。");
 				re.setException(e);
 			} 
 			return re;
