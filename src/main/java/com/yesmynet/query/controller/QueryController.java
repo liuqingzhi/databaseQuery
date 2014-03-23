@@ -27,6 +27,7 @@ import com.yesmynet.query.core.dto.QueryResult;
 import com.yesmynet.query.core.dto.ResultStream;
 import com.yesmynet.query.core.service.run.QueryRunService;
 import com.yesmynet.query.http.dto.SystemParameterName;
+import com.yesmynet.query.http.service.ParameterDataBinder;
 import com.yesmynet.query.http.service.QueryRenderService;
 
 
@@ -43,6 +44,10 @@ public class QueryController {
 	 */
 	@Resource(name="queryRenderService")
 	private QueryRenderService queryRenderService;
+	/**
+	 * 用于绑定参数的service
+	 */
+	private ParameterDataBinder binder=new ParameterDataBinder();
 	/**
 	 * 显示查询的界面
 	 * @param queryId
@@ -162,20 +167,7 @@ public class QueryController {
 	 */
 	private void setHttpParameterValue(QueryDefinition queryParameters,HttpServletRequest request)
 	{
-	    if(queryParameters!=null)
-	    {
-	        List<Parameter> parameters = queryParameters.getParameters();
-	        if(!CollectionUtils.isEmpty(parameters))
-	        {
-	            for(Parameter p:parameters)
-	            {
-	                String parameterName = p.getParameterInput().getName();
-	                String[] parameterValue = request.getParameterValues(parameterName);
-	                p.getParameterInput().setValues(parameterValue);
-	            }
-	        }    
-	    }
-		
+		binder.bind(queryParameters, request);
 	}
 	/**
 	 * 把exception转成string以帮助打印

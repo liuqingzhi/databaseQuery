@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.yesmynet.query.utils.MessageFormatUtils;
 
@@ -52,6 +53,12 @@ public class ParameterInput extends BaseDto
      * 参数运行时的值
      */
     private String[] values;
+    /**
+     * 上传的文件。
+     * 如果参数类型是file,则无法用字符串表示值，只好在这里与{@link #getValues()}并列的
+     * 放一个表示上传的文件，后期再调整吧。
+     */
+    private MultipartFile uploadedFile;
     /**
      * 参数的可选值，对于文本框就是默认值，对于下拉框则可以有多个可选择值
      */
@@ -155,6 +162,12 @@ public class ParameterInput extends BaseDto
 	}
 	public void setShow(Boolean show) {
 		this.show = show;
+	}
+	public MultipartFile getUploadedFile() {
+		return uploadedFile;
+	}
+	public void setUploadedFile(MultipartFile uploadedFile) {
+		this.uploadedFile = uploadedFile;
 	}
 	/**
      * 转成html代码
