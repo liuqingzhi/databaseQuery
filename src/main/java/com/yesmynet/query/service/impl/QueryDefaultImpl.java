@@ -314,6 +314,22 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     	return re.toString();
     }
     /**
+     * 得到定义快捷键的javascript
+     * @return
+     */
+    private String addShortCutKeyScript()
+    {
+    	StringBuilder sb=new StringBuilder();
+    	sb.append("<script type=\"text/javascript\">\n");
+    	sb.append("function submitQueryForm()\n");
+    	sb.append("{\n");
+    	sb.append("$(\"#queryForm\").submit();\n");
+    	sb.append("}\n");
+    	sb.append("shortcut.add(\"F8\", submitQueryForm);//定义快捷键\n");
+    	sb.append("</script>");
+    	return sb.toString();
+    }
+    /**
      * 得到为了执行用户选中的文本的功能的相关javascript
      * @return
      */
@@ -380,13 +396,14 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
     			re.append("							\"<input type='hidden' name='SystemQueryId' value='dqQuery'>\"+\n");
     			re.append("							\"<input type='hidden' name='command' value='streamLobQuery'>\"+\n");
     			re.append("							\"<input type='hidden' name='dbId'>\"+\n");
-    			re.append("							\"sql：<textarea rows='14' cols='60' name='sqlCode'></textarea>\"+\n");
+    			re.append("							\"sql：<textarea rows='6' cols='60' name='sqlCode'></textarea><br>\"+\n");
+    			re.append("							\"SQL的select子句中的第1个字段必须是大字段的字段名,SQL的最后不能有分号（‘;’），正确的SQL格式如下：select clob_blob_field from table_name where condition \"+\n");
     			re.append("							\"</form>\"\n");
     			re.append("				\n");
     			re.append("				var tag = $(\"#dbqueryDialogContainer\").html(formStr);\n");
     			re.append("				tag.dialog({\n");
-    			re.append("				      modal: true, title: '参数删除', zIndex: 10000, autoOpen: true,\n");
-    			re.append("				      width: 'auto', resizable: true,\n");
+    			re.append("				      modal: true, title: '下载大字段的sql', zIndex: 10000, autoOpen: true,\n");
+    			re.append("				      width: '650px', resizable: true,\n");
     			re.append("				      buttons: [\n");
     			re.append("				      		{\n");
     			re.append("								text:\"确认\",\n");
@@ -891,6 +908,7 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 				ResourceHolder resourceHolder, Environment environment) {
 			QueryResult re=new QueryResult();
 			
+			re.setContent(addShortCutKeyScript());
 			return re;
 		}
 		/**
@@ -1010,6 +1028,8 @@ public class QueryDefaultImpl implements QueryService,QueryDefinitionGetter
 	        	//如果是ajax请求就不能输出这个用来显示dialog的容器，那会导致显示多个dialog
 	        	resultContent.append("<div id='dbqueryDialogContainer'></div>");
 	        }
+	        
+	        resultContent.append(addShortCutKeyScript());
 	        
 	        re.setContent(resultContent.toString());
 	        re.setOnlyShowContent(ajaxRequest);

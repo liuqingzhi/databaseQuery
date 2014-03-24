@@ -3,13 +3,6 @@
 <html>
 	
 	<@dbQueryFuntion.head></@dbQueryFuntion.head>
-	<script type="text/javascript">
-		function submitQueryForm()
-		{
-			$("#queryForm").submit();
-		}
-		shortcut.add("F8", submitQueryForm);//定义快捷键
-	</script>
 	<body>
 		<div class="divBlock">
 			<form id="queryForm" action="" method="POST" ${formEnctype!""}>
