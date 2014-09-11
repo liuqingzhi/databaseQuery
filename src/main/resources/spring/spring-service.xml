@@ -80,6 +80,10 @@
 					<bean class="com.yesmynet.query.service.impl.QueryDefinitionImpl">
 					</bean>
 				</entry>
+				<entry key="mallads">
+					<bean class="com.yesmynet.query.service.impl.CmsAdvertisingInit">
+					</bean>
+				</entry>
 			</map>
 		</property>
 		
