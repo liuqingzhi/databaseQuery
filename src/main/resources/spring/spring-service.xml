@@ -23,7 +23,7 @@
 					           <value>oracle.jdbc.driver.OracleDriver</value>
 					       </property>
 					       <property name="url">
-					           <value>jdbc:oracle:thin:@127.0.0.1:1521:haijie</value><!-- 10.1.8.137:1521:mydev     127.0.0.1:1521:haijie-->
+					           <value>jdbc:oracle:thin:@127.0.0.1:1521:ymw2</value><!-- 10.1.8.137:1521:mydev     127.0.0.1:1521:haijie-->
 					       </property>
 					       <property name="username">
 					           <value>sc</value>
