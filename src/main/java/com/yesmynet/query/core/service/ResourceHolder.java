@@ -12,6 +12,24 @@ import com.yesmynet.query.core.dto.RedisConfig;
  */
 public interface ResourceHolder {
 	/**
+	 * 表示资源的类型
+	 */
+	public enum ResourceType
+	{
+		Database("数据库"),
+		Redis("redis缓存")
+		;
+		private String name;
+		private ResourceType(String name)
+		{
+			this.name=name;
+		}
+		public String getName() {
+			return name;
+		}
+		
+	}
+	/**
 	 * 得到所有可用的数据库配置
 	 * @return
 	 */

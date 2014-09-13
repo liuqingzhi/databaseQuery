@@ -20,7 +20,9 @@ import com.yesmynet.query.core.dto.ParameterLayoutDTO;
 import com.yesmynet.query.core.dto.QueryDefinition;
 import com.yesmynet.query.core.dto.RedisConfig;
 import com.yesmynet.query.core.dto.ResultTemplate;
+import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.service.ResourceHolder;
+import com.yesmynet.query.core.service.ResourceHolder.ResourceType;
 
 public class QueryUtils {
 	private static Gson gson = new GsonBuilder().serializeNulls().create();
@@ -103,7 +105,7 @@ public class QueryUtils {
     public static InfoDTO<DataSourceConfig> getDataSourceConfig(String dbId,ResourceHolder resourceHolder)
     {
     	InfoDTO<DataSourceConfig> re=new InfoDTO<DataSourceConfig>();
-    	getResourceConfig(dbId, resourceHolder, 1,re);
+    	getResourceConfig(dbId, resourceHolder, ResourceType.Database,re);
     	return re;
     }
     /**
@@ -115,7 +117,7 @@ public class QueryUtils {
     public static InfoDTO<RedisConfig> getRedisConfig(String dbId,ResourceHolder resourceHolder)
     {
     	InfoDTO<RedisConfig> re=new InfoDTO<RedisConfig>();
-    	getResourceConfig(dbId, resourceHolder, 2,re);
+    	getResourceConfig(dbId, resourceHolder, ResourceType.Redis,re);
     	return re;
     }
     /**
@@ -159,16 +161,15 @@ public class QueryUtils {
      * @param resourceType 类型，1表示要得到数据库资源，2表示要得到redis资源
      * @return
      */
-    private static void getResourceConfig(String dbId,ResourceHolder resourceHolder,int resourceType,InfoDTO re)
+    private static void getResourceConfig(String dbId,ResourceHolder resourceHolder,ResourceType resourceType,InfoDTO re)
     {
-    	String resourceTypeName="";
+    	String resourceTypeName=resourceType.getName();
     	List<? extends BaseDto> dataSourceConfigs =null;
-    	if(resourceType==1)
+    	if(ResourceType.Database.equals(resourceType))
     	{
     		dataSourceConfigs =resourceHolder.getDataSourceConfigs();
-    		resourceTypeName="数据库";
     	}
-    	else if(resourceType==2)
+    	else if(ResourceType.Redis.equals(resourceType))
     	{
     		dataSourceConfigs =resourceHolder.getRedisConfigs();
     		resourceTypeName="redis";
@@ -194,6 +195,7 @@ public class QueryUtils {
     		if(id.equals(dbId))
     		{
     			foundDB=db;
+    			break;
     		}
     	}
     	if(foundDB==null)
@@ -202,6 +204,56 @@ public class QueryUtils {
     		re.setMsg("您没有权限操作目标"+resourceTypeName);
     		return ;
     	}
+    	re.setSuccess(true);
+    	re.setMsg("获取资源成功");
     	re.setData(foundDB);
     }
+    /**
+	 * 得到要显示的所有资源的选项
+	 * @param dbs
+	 * @param generateAnEmptyOption
+	 * @return
+	 */
+	public static List<SelectOption> getResourceOptions(ResourceHolder resourceHolder,boolean generateAnEmptyOption,ResourceType resourceType)
+	{
+		List<SelectOption> re=new ArrayList<SelectOption>();
+		
+		if(generateAnEmptyOption)
+		{
+			SelectOption option=new SelectOption();
+			option.setValue("");
+			option.setText("");
+			re.add(option);
+		}
+		if(ResourceType.Database.equals(resourceType))
+		{
+			List<DataSourceConfig> dbs=resourceHolder.getDataSourceConfigs();
+			if(!CollectionUtils.isEmpty(dbs))
+			{
+				for(DataSourceConfig db:dbs)
+				{
+					SelectOption option=new SelectOption();
+					option.setValue(db.getId());
+					option.setText(db.getName());
+					re.add(option);
+				}
+			}
+		}
+		else if(ResourceType.Redis.equals(resourceType))
+		{
+			List<RedisConfig> dbs = resourceHolder.getRedisConfigs();
+			if(!CollectionUtils.isEmpty(dbs))
+			{
+				for(RedisConfig db:dbs)
+				{
+					SelectOption option=new SelectOption();
+					option.setValue(db.getId());
+					option.setText(db.getName());
+					re.add(option);
+				}
+			}
+		}
+		
+		return re;
+	}
 }

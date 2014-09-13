@@ -84,11 +84,6 @@ public abstract class AbstractMainQueryService implements QueryService{
 	protected void settingParameterOptions(QueryDefinition queryDefinition,ResourceHolder resourceHolder, Environment environment)
 	{
 	}
-	/**
-	 * 得到查询定义
-	 * @return
-	 */
-	public abstract QueryDefinition getQueryDefinition();
 	protected QueryService getQueryService(QueryDefinition queryDefinition,ResourceHolder resourceHolder, Environment environment) 
 	{
 		QueryService queryService = commandQueryMap.get(getCommand(queryDefinition,resourceHolder,environment));

@@ -25,6 +25,7 @@ import com.yesmynet.query.core.dto.SelectOption;
 import com.yesmynet.query.core.service.QueryDefinitionGetter;
 import com.yesmynet.query.core.service.QueryService;
 import com.yesmynet.query.core.service.ResourceHolder;
+import com.yesmynet.query.core.service.ResourceHolder.ResourceType;
 import com.yesmynet.query.utils.QueryUtils;
 /**
  * 商城页面用到的广告的初始化
@@ -40,10 +41,6 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 	 * 所有定义的广告
 	 */
 	private Set<AdCodeAndType> allAds;
-	 /**
-     * 表示提交的参数与要执行的命令的Map
-     */
-    private Map<String,QueryService> commandQueryMap;
     private QueryDefinition queryDefinition;
 	@Override
 	protected void afterConstructor() {
@@ -110,7 +107,7 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 		Parameter parameterByName = QueryUtils.getParameterByName(parameters, Parameter_dbId);
 		if(parameterByName!=null)
 		{
-			List<SelectOption> dbOptions = getDBOptions(resourceHolder.getDataSourceConfigs(),true);
+			List<SelectOption> dbOptions = QueryUtils.getResourceOptions(resourceHolder,true,ResourceType.Database);
 			parameterByName.getParameterInput().setOptionValues(dbOptions);
 		}
 		
@@ -131,36 +128,6 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 			
 			parameterByName2.getParameterInput().setOptionValues(dbOptions);
 		}
-	}
-	/**
-	 * 得到要显示的所有数据库
-	 * @param dbs
-	 * @param generateAnEmptyOption
-	 * @return
-	 */
-	private List<SelectOption> getDBOptions(List<DataSourceConfig> dbs,boolean generateAnEmptyOption)
-	{
-		List<SelectOption> re=new ArrayList<SelectOption>();
-		if(generateAnEmptyOption)
-		{
-			SelectOption option=new SelectOption();
-			option.setValue("");
-			option.setText("");
-			re.add(option);
-		}
-		
-		if(!CollectionUtils.isEmpty(dbs))
-		{
-			for(DataSourceConfig db:dbs)
-			{
-				SelectOption option=new SelectOption();
-				option.setValue(db.getId());
-				option.setText(db.getName());
-				re.add(option);
-			}
-		}
-		
-		return re;
 	}
     /**
      * 表示广告和对应的类型
@@ -293,14 +260,12 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 				JdbcTemplate jdbcTemplate) {
 			QueryResult re=new QueryResult();
 			
-			try {
+			
 				for(AdCodeAndType ad:allAds)
 				{
 					deleteHtmlAd(ad.getAdCode(),jdbcTemplate);
 				}
-			} catch (Exception e) {
-				re.setContent(ExceptionUtils.getFullStackTrace(e));
-			}
+			
 			re.setContent("删除广告成功");
 			return re;
 		}
@@ -314,9 +279,9 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 		{
 			int deleted=0;
 			
-			jdbcTemplate.update("delete  from  m_cms_ad_il_publish where M_ID in (select id from M_CMS_AD_IL_MAP where L_ID in (select id from M_CMS_AD_LOCATION where L_CODE=?)",locateCode);
+			jdbcTemplate.update("delete  from m_cms_ad_il_publish where M_ID in (select id from M_CMS_AD_IL_MAP where L_ID in (select id from M_CMS_AD_LOCATION where L_CODE=?))",locateCode);
 			jdbcTemplate.update("delete  from M_CMS_AD_IL_MAP where L_ID in (select id from M_CMS_AD_LOCATION where L_CODE=?)",locateCode);
-			jdbcTemplate.update("delete  from from M_CMS_AD_LOCATION where L_CODE=?",locateCode);
+			jdbcTemplate.update("delete  from M_CMS_AD_LOCATION where L_CODE=?",locateCode);
 			
 			return deleted;
 		}
