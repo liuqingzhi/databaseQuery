@@ -31,7 +31,7 @@ import com.yesmynet.query.utils.QueryUtils;
  * @author liuqingzhi
  *
  */
-public class CmsAdvertisingInit implements QueryService,QueryDefinitionGetter{
+public class CmsAdvertisingInit extends AbstractMainQueryService implements QueryDefinitionGetter{
 	private final String Parameter_dbId="dbId";
 	private final String Parameter_command="command";
 	private final String Command_Value_Delete="deleteAds";
@@ -44,9 +44,10 @@ public class CmsAdvertisingInit implements QueryService,QueryDefinitionGetter{
      * 表示提交的参数与要执行的命令的Map
      */
     private Map<String,QueryService> commandQueryMap;
-    
-	public CmsAdvertisingInit() {
-		super();
+    private QueryDefinition queryDefinition;
+	@Override
+	protected void afterConstructor() {
+		super.afterConstructor();
 		commandQueryMap=new HashMap<String,QueryService>();
 		
 		commandQueryMap.put("deleteAds", new DeleteAdQueryService());
@@ -70,38 +71,34 @@ public class CmsAdvertisingInit implements QueryService,QueryDefinitionGetter{
 				"		</li>\n"+
 				"	</ul>\n"+
 				"</div>\n"));
-		
-		
 	}
-
+	@Override
+	protected String getCommand(QueryDefinition queryDefinition,
+			ResourceHolder resourceHolder, Environment environment) {
+		queryDefinition=getQueryDefinition();
+		List<Parameter> parameters = queryDefinition.getParameters();
+		return QueryUtils.getParameterValue(parameters, Parameter_command);
+	}
 	@Override
 	public QueryDefinition getQueryDefinition() {
-		QueryDefinition queryDefinition=new QueryDefinition();
-        List<Parameter> parameters=new ArrayList<Parameter>();
-        
-        parameters.add(getParameter("数据库",Parameter_dbId,"",ParameterHtmlType.Select,null,null,null,true,10,1,1));
-        parameters.add(getParameter("要执行的操作",Parameter_command,"",ParameterHtmlType.Select,null,null,null,true,10,1,1));
-        parameters.add(getParameter("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\"#queryForm\").submit();'",true,30,1,1));
-    	
-        queryDefinition.setParameters(parameters);
+		if(queryDefinition==null)
+		{
+			queryDefinition=new QueryDefinition();
+			List<Parameter> parameters=new ArrayList<Parameter>();
+			
+			queryDefinition.setParameters(parameters);
+			
+			parameters.add(QueryUtils.createParameter("要执行的操作",Parameter_command,"",ParameterHtmlType.Select,null,null,null,true,10,1,1));
+			parameters.add(QueryUtils.createParameter("要操作的数据库",Parameter_dbId,"",ParameterHtmlType.Select,null,null,null,true,10,1,1));
+			parameters.add(QueryUtils.createParameter("确定","executeButton","",ParameterHtmlType.Button,"","","onclick='$(\"#queryForm\").submit();'",true,30,1,1));
+		}
 
         return queryDefinition;
 	}
-
 	@Override
-	public QueryResult doInQuery(QueryDefinition queryDefinition,
+	protected void settingParameterOptions(QueryDefinition queryDefinition,
 			ResourceHolder resourceHolder, Environment environment) {
-		QueryResult re=null;
-		
-		List<Parameter> parameters = queryDefinition.getParameters();
-		String command = QueryUtils.getParameterValue(parameters, Parameter_command);
-		
-		settingParameterOptions(parameters,resourceHolder);
-		QueryService queryService = commandQueryMap.get(command);
-		if(queryService!=null)
-			re=queryService.doInQuery(queryDefinition, resourceHolder, environment);
-        
-		return re;
+		settingParameterOptions(queryDefinition.getParameters(),resourceHolder);
 	}
 	/**
 	 * 设置参数的选项
@@ -134,7 +131,6 @@ public class CmsAdvertisingInit implements QueryService,QueryDefinitionGetter{
 			
 			parameterByName2.getParameterInput().setOptionValues(dbOptions);
 		}
-		
 	}
 	/**
 	 * 得到要显示的所有数据库
@@ -166,82 +162,6 @@ public class CmsAdvertisingInit implements QueryService,QueryDefinitionGetter{
 		
 		return re;
 	}
-	/**
-	 * 构造函数
-	 * @param title 参数标题
-	 * @param description 参数描述
-	 * @param htmlType 参数html控件类型
-	 * @param name 参数名称
-	 * @param style 样式
-	 * @param styleCss 样式的class
-	 * @param elementHtml 直接在html中输出的内容
-	 */
-	private Parameter getParameter(String title,String name,String description,ParameterHtmlType htmlType,String style,String styleClass,String elementHtml,Boolean notShow,Integer sort,Integer rowSpan,Integer columnSpan)
-	{
-		Parameter parameter=new Parameter();
-		ParameterInput input=new ParameterInput();
-		ParameterLayoutDTO parameterLayoutDTO=new ParameterLayoutDTO();
-		
-		input.setTitle(title);
-		input.setDescription(description);
-		input.setHtmlType(htmlType);
-		input.setName(name);
-		input.setStyle(style);
-		input.setStyleClass(styleClass);
-		input.setElementHtml(elementHtml);
-		input.setShow(notShow);
-		
-		parameterLayoutDTO.setSort(sort);
-		parameterLayoutDTO.setRowSpan(rowSpan);
-		parameterLayoutDTO.setColumnSpan(columnSpan);
-		
-		parameter.setParameterInput(input);
-		parameter.setParameterLayoutDTO(parameterLayoutDTO);
-		
-		return parameter;
-	}
-	/**
-     * 根据用户选择的数据库ID得到数据库
-     * @param dbId
-     * @param resourceHolder
-     * @return
-     */
-    private InfoDTO<DataSourceConfig> getDataSourceConfig(String dbId,ResourceHolder resourceHolder)
-    {
-    	InfoDTO<DataSourceConfig> re=new InfoDTO<DataSourceConfig>();
-    	re.setSuccess(true);
-    	re.setMsg("操作成功");
-    	if(!StringUtils.hasText(dbId))
-    	{
-    		re.setSuccess(false);
-    		re.setMsg("没有选择要执行的目标数据库");
-    		return re;
-    	}
-    	List<DataSourceConfig> dataSourceConfigs = resourceHolder.getDataSourceConfigs();
-    	if(CollectionUtils.isEmpty(dataSourceConfigs))
-    	{
-    		re.setSuccess(false);
-    		re.setMsg("您没有权限操作数据库");
-    		return re;
-    	}
-    	DataSourceConfig foundDB=null;
-    	for(DataSourceConfig db:dataSourceConfigs)
-    	{
-    		String id = db.getId();
-    		if(id.equals(dbId))
-    		{
-    			foundDB=db;
-    		}
-    	}
-    	if(foundDB==null)
-    	{
-    		re.setSuccess(false);
-    		re.setMsg("您没有权限操作目标数据库");
-    		return re;
-    	}
-    	re.setData(foundDB);
-    	return re;
-    }
     /**
      * 表示广告和对应的类型
      * @author liuqingzhi
@@ -310,7 +230,7 @@ public class CmsAdvertisingInit implements QueryService,QueryDefinitionGetter{
 			List<Parameter> parameters = queryDefinition.getParameters();
 			String dbId = QueryUtils.getParameterValue(parameters,Parameter_dbId);
 	        
-			InfoDTO<DataSourceConfig> dataSourceConfigInfoDTO = getDataSourceConfig(dbId,resourceHolder);
+			InfoDTO<DataSourceConfig> dataSourceConfigInfoDTO = QueryUtils.getDataSourceConfig(dbId,resourceHolder);
 	        
 	        if(!dataSourceConfigInfoDTO.isSuccess())
 	        {
