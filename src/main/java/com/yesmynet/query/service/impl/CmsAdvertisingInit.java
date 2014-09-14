@@ -687,6 +687,49 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 			public void setContent(String content) {
 				this.content = content;
 			}
+			@Override
+			public void delete(AdCodeAndType ad, JdbcTemplate jdbcTemplate) {
+				deleteHtmlAd(ad.getAdCode(),jdbcTemplate);
+			}
+			@Override
+			public void insert(AdCodeAndType ad, JdbcTemplate jdbcTemplate) {
+				initHtmlAd(ad.getAdCode(),ad.getName(),this.getContent(),jdbcTemplate);
+			}
+			private void initHtmlAd(String locateCode,String adName,String adContent,JdbcTemplate jdbcTemplate)
+			{
+				long locationId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_L_ID.Nextval  from dual");
+				long adId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_I_ID.Nextval  from dual");
+				long adLocMapId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_ILM_ID.Nextval  from dual");
+				long publicId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_ILP_ID.Nextval  from dual");
+				
+				jdbcTemplate.update("insert into M_CMS_AD_LOCATION (ID, L_NAME, L_CODE, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION)\n"+
+				"values (?, ?, ?, 0, null, null, sysdate, 1, 0)", locationId,adName,locateCode);
+				
+				jdbcTemplate.update("insert into M_CMS_AD_INFO (ID, I_NAME, I_BEGIN_DATE, I_END_DATE, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION, I_CONTENT, CHANNEL_NO)\n"+
+				"values (?, ?, sysdate-200, sysdate+500, 0, null, null, sysdate, 1, 0, ?, '01')",adId,adName,adContent);
+				
+				jdbcTemplate.update("insert into M_CMS_AD_IL_MAP (ID, I_ID, L_ID, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION)\n"+
+				"values (?, ?, ?, 0, null, null, sysdate, 1, 0)",adLocMapId,adId,locationId);
+
+				jdbcTemplate.update("insert into m_cms_ad_il_publish (ID, M_ID, P_ONLINE_FLAG, P_BEGIN_DATE, P_END_DATE, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION)\n"+
+				"values (?, ?, 1, sysdate-1, sysdate+1000, 0, null, null, sysdate, 1, 0)",publicId,adLocMapId);
+			}
+			/**
+			 * 删除指定
+			 * @param locateCode
+			 * @param jdbcTemplate
+			 * @return
+			 */
+			private int deleteHtmlAd(String locateCode,JdbcTemplate jdbcTemplate)
+			{
+				int deleted=0;
+				
+				jdbcTemplate.update("delete  from m_cms_ad_il_publish where M_ID in (select id from M_CMS_AD_IL_MAP where L_ID in (select id from M_CMS_AD_LOCATION where L_CODE=?))",locateCode);
+				jdbcTemplate.update("delete  from M_CMS_AD_IL_MAP where L_ID in (select id from M_CMS_AD_LOCATION where L_CODE=?)",locateCode);
+				jdbcTemplate.update("delete  from M_CMS_AD_LOCATION where L_CODE=?",locateCode);
+				
+				return deleted;
+			}
     	}
     	public static class ImagListAdContent implements AdContent
     	{
@@ -709,6 +752,37 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 			}
 			public void setItems(List<AdItem> items) {
 				this.items = items;
+			}
+			@Override
+			public void delete(AdCodeAndType ad, JdbcTemplate jdbcTemplate) {
+				deleteImageAd(ad.getAdCode(),jdbcTemplate);
+			}
+			@Override
+			public void insert(AdCodeAndType ad, JdbcTemplate jdbcTemplate) {
+				initItemAd(ad.getAdCode(),ad.getName(),this.getViewMax(),this.getItems(),jdbcTemplate);
+			}
+			private void initItemAd(String locateCode,String adName,Integer viewMax,List<AdContent.ImagListAdContent.AdItem> items,JdbcTemplate jdbcTemplate)
+			{
+				long adSiteId = jdbcTemplate.queryForLong("select SEQ_M_CMS_ADVERTISING_SITE_ID.Nextval from dual");
+				
+				jdbcTemplate.update("insert into M_CMS_ADVERTISING_SITE (ADS_ID, ADS_NAME, ADS_CODE, DISPLAY_ORDER, VIEW_MAXNUM, ADS_TYPE, ADS_LENGTH, ADS_WIDTH, ADS_DESC, CREATE_TIME, CANCEL_FLAG, UPDATE_BY, UPDATE_TIME)\n"+
+						"values (?,?,?,270, ?, 1, null, null, null, sysdate, 0, 1, sysdate)",adSiteId,adName,locateCode,viewMax);
+				
+				if(!CollectionUtils.isEmpty(items))
+				{
+					int i=1;
+					for(AdContent.ImagListAdContent.AdItem it:items)
+					{
+						long adId = jdbcTemplate.queryForLong("select SEQ_M_CMS_ADVERTISING_ID.Nextval from dual");
+						jdbcTemplate.update("insert into M_CMS_ADVERTISING (AT_ID, ADS_ID, AT_NAME, DISPLAY_ORDER, START_TIME, END_TIME, ONLINE_STATUS, AT_TYPE, MEDIUM_ADDRESS, LINK_ADDRESS, AT_TEXT, JUMP_TYPE, CREATE_TIME, CANCEL_FLAG, UPDATE_BY, UPDATE_TIME, IMG_ADDRESS)\n"+
+								"values (?, ?, ?, ?, sysdate-10, sysdate+100, 0, 2, '', ?, null, 0, sysdate, 0, 1, sysdate, ?)",adId,adSiteId,it.getTitle(),i*10,it.getLink(),it.getImageSrc());
+						i++;
+					}
+				}
+			}
+			private void deleteImageAd(String adCode, JdbcTemplate jdbcTemplate) {
+				jdbcTemplate.update("delete From M_CMS_ADVERTISING where ADS_ID in (select ADS_ID from M_CMS_ADVERTISING_SITE where ADS_CODE=?)",adCode);
+				jdbcTemplate.update("delete from M_CMS_ADVERTISING_SITE where ADS_CODE=?",adCode);
 			}
 			/**
 		     * 包含多个内容的广告的内容
@@ -777,7 +851,50 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 			public void setGoodsIds(List<Long> goodsIds) {
 				this.goodsIds = goodsIds;
 			}
+			@Override
+			public void delete(AdCodeAndType ad, JdbcTemplate jdbcTemplate) {
+				deleteGoodsAd(ad.getAdCode(), jdbcTemplate);
+			}
+			@Override
+			public void insert(AdCodeAndType ad, JdbcTemplate jdbcTemplate) {
+				initGoodsListAd(ad.getAdCode(),ad.getName(),this.getViewMax(),this.getGoodsIds(),jdbcTemplate);
+			}
+			private void initGoodsListAd(String adCode, String name,Integer viewMax, List<Long> goodsIds, JdbcTemplate jdbcTemplate) {
+				long adId = jdbcTemplate.queryForLong("select seq_m_cms_gr_site_id.nextval from dual");
+				
+				jdbcTemplate.update("insert into m_cms_gr_site (grsite_id,page_id,grsite_name,grsite_code,order_by,view_maxnum,grsite_desc,cancel_flag)\n"+
+				"values (?,1,?,?,20,?,null,0)",adId,name,adCode,viewMax);
+				
+				int i=1;
+				if(!CollectionUtils.isEmpty(goodsIds))
+				{
+					for(Long goodsId:goodsIds)
+					{
+						long itemId = jdbcTemplate.queryForLong("select seq_m_cms_gr_site_goods_id.nextval from dual");
+						jdbcTemplate.update("insert into m_cms_gr_site_goods(grsg_id,grsite_id,goods_id,display_order,cancel_flag)\n"+
+								"values (?,?,?,?,0)",itemId,adId,goodsId,i*10);
+						i++;
+					}
+				}
+				
+			}
+			private void deleteGoodsAd(String adCode, JdbcTemplate jdbcTemplate) {
+				jdbcTemplate.update("delete From m_cms_gr_site_goods where grsite_id in (select grsite_id from m_cms_gr_site where grsite_code=?)",adCode);
+				jdbcTemplate.update("delete from m_cms_gr_site where grsite_code=?",adCode);
+			}
     	}
+    	/**
+    	 * 删除广告的操作
+    	 * @param ad
+    	 * @param jdbcTemplate
+    	 */
+    	public void delete(AdCodeAndType ad,JdbcTemplate jdbcTemplate);
+    	/**
+    	 * 插入广告的操作
+    	 * @param ad
+    	 * @param jdbcTemplate
+    	 */
+	    public void insert(AdCodeAndType ad,JdbcTemplate jdbcTemplate);
     }
     
     private abstract class AbstractQueryService implements QueryService
@@ -804,11 +921,9 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 			return re;
 		}
     	public abstract QueryResult doInDb(QueryDefinition queryDefinition,ResourceHolder resourceHolder, Environment environment,JdbcTemplate jdbcTemplate);
-    	
     }
     private class InitAdQueryService extends AbstractQueryService
     {
-
 		@Override
 		public QueryResult doInDb(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment,JdbcTemplate jdbcTemplate) {
@@ -819,142 +934,31 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 				AdContent adContent = ad.getAdContent();
 				if(adContent!=null)
 				{
-					if(adContent instanceof AdContent.StringAdContent)
-					{
-						AdContent.StringAdContent content=(AdContent.StringAdContent)adContent;
-						initHtmlAd(ad.getAdCode(),ad.getName(),content.getContent(),jdbcTemplate);
-					}
-					else if(adContent instanceof AdContent.ImagListAdContent)
-					{
-						AdContent.ImagListAdContent content=(AdContent.ImagListAdContent)adContent;
-						initItemAd(ad.getAdCode(),ad.getName(),content.getViewMax(),content.getItems(),jdbcTemplate);
-					}
-					else if(adContent instanceof AdContent.GoodsListAdContent)
-					{
-						AdContent.GoodsListAdContent content=(AdContent.GoodsListAdContent)adContent;
-						initGoodsListAd(ad.getAdCode(),ad.getName(),content.getViewMax(),content.getGoodsIds(),jdbcTemplate);
-					}
+					adContent.insert(ad, jdbcTemplate);
 				}
-					
 			}
 			re.setContent("初始化广告内容成功");
 			return re;
 		}
-		private void initHtmlAd(String locateCode,String adName,String adContent,JdbcTemplate jdbcTemplate)
-		{
-			long locationId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_L_ID.Nextval  from dual");
-			long adId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_I_ID.Nextval  from dual");
-			long adLocMapId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_ILM_ID.Nextval  from dual");
-			long publicId = jdbcTemplate.queryForLong("select SEQ_M_CMS_AD_ILP_ID.Nextval  from dual");
-			
-			jdbcTemplate.update("insert into M_CMS_AD_LOCATION (ID, L_NAME, L_CODE, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION)\n"+
-			"values (?, ?, ?, 0, null, null, sysdate, 1, 0)", locationId,adName,locateCode);
-			
-			jdbcTemplate.update("insert into M_CMS_AD_INFO (ID, I_NAME, I_BEGIN_DATE, I_END_DATE, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION, I_CONTENT, CHANNEL_NO)\n"+
-			"values (?, ?, sysdate-200, sysdate+500, 0, null, null, sysdate, 1, 0, ?, '01')",adId,adName,adContent);
-			
-			jdbcTemplate.update("insert into M_CMS_AD_IL_MAP (ID, I_ID, L_ID, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION)\n"+
-			"values (?, ?, ?, 0, null, null, sysdate, 1, 0)",adLocMapId,adId,locationId);
-
-			jdbcTemplate.update("insert into m_cms_ad_il_publish (ID, M_ID, P_ONLINE_FLAG, P_BEGIN_DATE, P_END_DATE, CANCEL_FLAG, UPDATE_DATE, UPDATE_BY, CREATED_DATE, CREATED_BY, VERSION)\n"+
-			"values (?, ?, 1, sysdate-1, sysdate+1000, 0, null, null, sysdate, 1, 0)",publicId,adLocMapId);
-		}
-		private void initItemAd(String locateCode,String adName,Integer viewMax,List<AdContent.ImagListAdContent.AdItem> items,JdbcTemplate jdbcTemplate)
-		{
-			long adSiteId = jdbcTemplate.queryForLong("select SEQ_M_CMS_ADVERTISING_SITE_ID.Nextval from dual");
-			
-			jdbcTemplate.update("insert into M_CMS_ADVERTISING_SITE (ADS_ID, ADS_NAME, ADS_CODE, DISPLAY_ORDER, VIEW_MAXNUM, ADS_TYPE, ADS_LENGTH, ADS_WIDTH, ADS_DESC, CREATE_TIME, CANCEL_FLAG, UPDATE_BY, UPDATE_TIME)\n"+
-					"values (?,?,?,270, ?, 1, null, null, null, sysdate, 0, 1, sysdate)",adSiteId,adName,locateCode,viewMax);
-			
-			if(!CollectionUtils.isEmpty(items))
-			{
-				int i=1;
-				for(AdContent.ImagListAdContent.AdItem it:items)
-				{
-					long adId = jdbcTemplate.queryForLong("select SEQ_M_CMS_ADVERTISING_ID.Nextval from dual");
-					jdbcTemplate.update("insert into M_CMS_ADVERTISING (AT_ID, ADS_ID, AT_NAME, DISPLAY_ORDER, START_TIME, END_TIME, ONLINE_STATUS, AT_TYPE, MEDIUM_ADDRESS, LINK_ADDRESS, AT_TEXT, JUMP_TYPE, CREATE_TIME, CANCEL_FLAG, UPDATE_BY, UPDATE_TIME, IMG_ADDRESS)\n"+
-							"values (?, ?, ?, ?, sysdate-10, sysdate+100, 0, 2, '', ?, null, 0, sysdate, 0, 1, sysdate, ?)",adId,adSiteId,it.getTitle(),i*10,it.getLink(),it.getImageSrc());
-					i++;
-				}
-			}
-		}
-		private void initGoodsListAd(String adCode, String name,Integer viewMax, List<Long> goodsIds, JdbcTemplate jdbcTemplate) {
-			long adId = jdbcTemplate.queryForLong("select seq_m_cms_gr_site_id.nextval from dual");
-			
-			jdbcTemplate.update("insert into m_cms_gr_site (grsite_id,page_id,grsite_name,grsite_code,order_by,view_maxnum,grsite_desc,cancel_flag)\n"+
-			"values (?,1,?,?,20,?,null,0)",adId,name,adCode,viewMax);
-			
-			int i=1;
-			if(!CollectionUtils.isEmpty(goodsIds))
-			{
-				for(Long goodsId:goodsIds)
-				{
-					long itemId = jdbcTemplate.queryForLong("select seq_m_cms_gr_site_goods_id.nextval from dual");
-					jdbcTemplate.update("insert into m_cms_gr_site_goods(grsg_id,grsite_id,goods_id,display_order,cancel_flag)\n"+
-							"values (?,?,?,?,0)",itemId,adId,goodsId,i*10);
-					i++;
-				}
-			}
-			
-		}
     }
     private class DeleteAdQueryService extends AbstractQueryService
     {
-
 		@Override
 		public QueryResult doInDb(QueryDefinition queryDefinition,
 				ResourceHolder resourceHolder, Environment environment,
 				JdbcTemplate jdbcTemplate) {
 			QueryResult re=new QueryResult();
 			
-			
 				for(AdCodeAndType ad:allAds)
 				{
 					AdContent adContent = ad.getAdContent();
 					if(adContent!=null)
 					{
-						if(adContent instanceof AdContent.StringAdContent)
-						{
-							deleteHtmlAd(ad.getAdCode(),jdbcTemplate);
-						}
-						else if(adContent instanceof AdContent.ImagListAdContent)
-						{
-							deleteImageAd(ad.getAdCode(),jdbcTemplate);
-						}
-						else if(adContent instanceof AdContent.GoodsListAdContent)
-						{
-							deleteGoodsAd(ad.getAdCode(),jdbcTemplate);
-						}
+						adContent.delete(ad, jdbcTemplate);
 					}
-					
 				}
-			
 			re.setContent("删除广告成功");
 			return re;
-		}
-		/**
-		 * 删除指定
-		 * @param locateCode
-		 * @param jdbcTemplate
-		 * @return
-		 */
-		private int deleteHtmlAd(String locateCode,JdbcTemplate jdbcTemplate)
-		{
-			int deleted=0;
-			
-			jdbcTemplate.update("delete  from m_cms_ad_il_publish where M_ID in (select id from M_CMS_AD_IL_MAP where L_ID in (select id from M_CMS_AD_LOCATION where L_CODE=?))",locateCode);
-			jdbcTemplate.update("delete  from M_CMS_AD_IL_MAP where L_ID in (select id from M_CMS_AD_LOCATION where L_CODE=?)",locateCode);
-			jdbcTemplate.update("delete  from M_CMS_AD_LOCATION where L_CODE=?",locateCode);
-			
-			return deleted;
-		}
-		private void deleteImageAd(String adCode, JdbcTemplate jdbcTemplate) {
-			jdbcTemplate.update("delete From M_CMS_ADVERTISING where ADS_ID in (select ADS_ID from M_CMS_ADVERTISING_SITE where ADS_CODE=?)",adCode);
-			jdbcTemplate.update("delete from M_CMS_ADVERTISING_SITE where ADS_CODE=?",adCode);
-		}
-		private void deleteGoodsAd(String adCode, JdbcTemplate jdbcTemplate) {
-			jdbcTemplate.update("delete From m_cms_gr_site_goods where grsite_id in (select grsite_id from m_cms_gr_site where grsite_code=?)",adCode);
-			jdbcTemplate.update("delete from m_cms_gr_site where grsite_code=?",adCode);
 		}
     }
 }
