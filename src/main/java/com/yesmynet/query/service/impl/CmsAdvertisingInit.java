@@ -73,8 +73,8 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 				"</div>\n")));
 		
 		allAds.add(new AdCodeAndType("V3_MALL_HEAD_TOPLINE","商城页面顶部小广告",new AdContent.StringAdContent("<div class=\"head-topline e-topline\" btime=\"2014-05-05 00:00:00\" etime=\"2023-06-30 23:59:59\" style=\";background:#8b23ae;width:100%;margin-bottom:0; padding-bottom:0;position:relative;\" >\n"+ 
-				"<div style=\"background:url(http://img5.yesmyimg.com/goods/alisa/20140909960_130.jpg) no-repeat center 0;height:130px;position:relative;width:auto;\" class=\"topline-main\">\n"+ 
-				"<a style=\"display:block;height:130px;position:absolute;width:100%;left:0;\" target=\"_blank\" href=\"http://www.yesmywine.com/marketing/topic/018168/018168.html\"></a>\n"+ 
+				"<div style=\"background:url(http://121.40.175.204/img/cmsad/20140909960_130.jpg) no-repeat center 0;height:130px;position:relative;width:auto;\" class=\"topline-main\">\n"+ 
+				"<a style=\"display:block;height:130px;position:absolute;width:100%;left:0;\" target=\"_blank\" href=\"\"></a>\n"+ 
 				"</div>\n"+ 
 				"</div>")));
 		
@@ -526,8 +526,8 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 		List<AdContent.ImagListAdContent.AdItem> items=new ArrayList<AdContent.ImagListAdContent.AdItem>();
 		bigFocuseImags.setItems(items);
 		bigFocuseImags.setViewMax(6);
-		items.add(new AdContent.ImagListAdContent.AdItem("天禄手工酒","http://img05.yesmyimg.com/advertImgFlv/1408523913621.jpg","/"));
-		items.add(new AdContent.ImagListAdContent.AdItem("世博金奖纪念酒","http://img05.yesmyimg.com/advertImgFlv/1409540344498.jpg","/"));
+		items.add(new AdContent.ImagListAdContent.AdItem("天禄手工酒","http://121.40.175.204/img/cmsad/1408523913621.jpg","/"));
+		items.add(new AdContent.ImagListAdContent.AdItem("世博金奖纪念酒","http://121.40.175.204/img/cmsad/1409540344498.jpg","/"));
 		allAds.add(bigFocus);
 		
 		//新店商品列表
@@ -549,7 +549,7 @@ public class CmsAdvertisingInit extends AbstractMainQueryService implements Quer
 		List<AdContent.ImagListAdContent.AdItem> promotionImagesItems=new ArrayList<AdContent.ImagListAdContent.AdItem>();
 		promotionImags.setItems(promotionImagesItems);
 		promotionImags.setViewMax(3);
-		promotionImagesItems.add(new AdContent.ImagListAdContent.AdItem("商城促销","http://img5.yesmyimg.com/goods/alisa/108s.jpg","/"));
+		promotionImagesItems.add(new AdContent.ImagListAdContent.AdItem("商城促销","http://121.40.175.204/img/cmsad/108s.jpg","/"));
 		allAds.add(promotion);
 		
 		
