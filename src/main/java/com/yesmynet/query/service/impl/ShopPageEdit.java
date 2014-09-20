@@ -37,10 +37,10 @@ public class ShopPageEdit extends AbstractMainQueryService implements QueryDefin
 	@Override
 	protected void afterConstructor() {
 		super.afterConstructor();
-		this.commandQueryMap.put("show", new ShowPage());
-		this.commandQueryMap.put("get", new GetAllModule());
-		this.commandQueryMap.put("show", new ShowModule());
-		this.commandQueryMap.put("save", new SaveModule());
+		this.commandQueryMap.put("showPage", new ShowPage());
+		this.commandQueryMap.put("getModule", new GetModule());
+		this.commandQueryMap.put("showModule", new ShowModule());
+		this.commandQueryMap.put("saveModule", new SaveModule());
 		
 		
 		positionModules=new HashMap<String,List<ModuleConfig>>();
@@ -274,7 +274,7 @@ public enum ComponentDataType {
 	 * @author liuqingzhi
 	 *
 	 */
-	private class GetAllModule implements QueryService
+	private class GetModule implements QueryService
 	{
 		@Override
 		public QueryResult doInQuery(QueryDefinition queryDefinition,
