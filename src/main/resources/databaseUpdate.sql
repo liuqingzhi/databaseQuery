@@ -74,8 +74,8 @@ CREATE TABLE m_sys_user_role
 	role_id int/*角色Id*/
 	)
 	;	
-insert into  m_sys_user (LOGIN_NAME,PASSWORD,NICK,CREATEDATE) values ('admin','123456','系统管理员',CURRENT_TIMESTAMP);
-insert into  m_sys_user (LOGIN_NAME,PASSWORD,NICK,CREATEDATE) values ('user1','123456','普通用户1',CURRENT_TIMESTAMP);
+insert into  m_sys_user (LOGIN_NAME,PASSWORD,NICK,CREATEDATE) values ('admin','jiamusiluhaijie','系统管理员',CURRENT_TIMESTAMP);
+insert into  m_sys_user (LOGIN_NAME,PASSWORD,NICK,CREATEDATE) values ('user1','jiamusiluhaijie','普通用户1',CURRENT_TIMESTAMP);
 insert into  m_sys_role (ROLE_CODE,ROLE_TITLE) values ('role_admin','系统管理员角色');
 insert into  m_sys_role (ROLE_CODE,ROLE_TITLE) values ('role_user','普通用户');
 insert into  m_sys_user_role (USER_ID,ROLE_ID) values (1,1);
